@@ -62,8 +62,8 @@ public class Tokeniser {
         if (c == '+')
             return new Token(TokenClass.PLUS, line, column);
 
-        // ... to be completed
-
+        if (c == '-')
+            return new Token(TokenClass.MINUS, line, column);
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
