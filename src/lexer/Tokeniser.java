@@ -146,7 +146,18 @@ public class Tokeniser {
             return new Token(TokenClass.REM, line, column);
         }
 
-        /****** recognises the assignment operator and comparison operator ******/
+        /****** recognises the logic operators ******/
+        if (c == '&' && scanner.peek() == '&') {
+            scanner.next();
+            return new Token(TokenClass.AND, line, column);
+        }
+
+        if (c == '|' && scanner.peek() == '|') {
+            scanner.next();
+            return new Token(TokenClass.OR, line, column);
+        }
+
+        /****** recognises the assignment operator and comparison operators ******/
         if (c == '=') {
             if (scanner.peek() == '=') {
                 scanner.next();
