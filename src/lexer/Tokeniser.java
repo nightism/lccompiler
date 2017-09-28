@@ -43,9 +43,6 @@ public class Tokeniser {
         return result;
     }
 
-    /*
-     * To be completed
-     */
     private Token next() throws IOException {
 
         int line = scanner.getLine();
@@ -62,10 +59,7 @@ public class Tokeniser {
         /****** skip the comments ******/
         if (c == '/') {
             if (scanner.peek() == '/') {
-                char nextOne = scanner.next();
-                while (!(nextOne == '\n' || nextOne == '\r')) {
-                    nextOne = scanner.next();
-                }
+                skipLine();
                 return next();
             } else if (scanner.peek() == '*') {
                 char nextOne = scanner.next();
@@ -88,6 +82,7 @@ public class Tokeniser {
                 nextOne = scanner.next();
             }
             if (includeToken.equals("#include")) {
+                // TODO need to check whether the following is a valid string
                 return new Token(TokenClass.INCLUDE, line, thisCol);
             }
         }
@@ -118,6 +113,12 @@ public class Tokeniser {
         return new Token(TokenClass.INVALID, line, column);
     }
 
+    private void skipLine() throws IOException {
+        char nextOne = scanner.next();
+        while (!(nextOne == '\n' || nextOne == '\r')) {
+            nextOne = scanner.next();
+        }
+    }
 
 }
 
