@@ -125,6 +125,27 @@ public class Tokeniser {
             return new Token(TokenClass.COMMA, line, column);
         }
 
+        /****** recognises the arithmetic operator ******/
+        if (c == '+') {
+            return new Token(TokenClass.PLUS, line, column);
+        }
+
+        if (c == '-') {
+            return new Token(TokenClass.MINUS, line, column);
+        }
+
+        if (c == '*') {
+            return new Token(TokenClass.ASTERIX, line, column);
+        }
+
+        if (c == '/' && scanner.peek() != '/' && scanner.peek() != '*') {
+            return new Token(TokenClass.DIV, line, column);
+        }
+
+        if (c == '%') {
+            return new Token(TokenClass.REM, line, column);
+        }
+
         /****** recognises the assignment operator and comparison operator ******/
         if (c == '=') {
             if (scanner.peek() == '=') {
@@ -157,25 +178,9 @@ public class Tokeniser {
             }
         }
 
-        /****** recognises the arithmetic operator ******/
-        if (c == '+') {
-            return new Token(TokenClass.PLUS, line, column);
-        }
-
-        if (c == '-') {
-            return new Token(TokenClass.MINUS, line, column);
-        }
-
-        if (c == '*') {
-            return new Token(TokenClass.ASTERIX, line, column);
-        }
-
-        if (c == '/' && scanner.peek() != '/' && scanner.peek() != '*') {
-            return new Token(TokenClass.DIV, line, column);
-        }
-
-        if (c == '%') {
-            return new Token(TokenClass.REM, line, column);
+        /****** recognises the struct member access symbol ******/
+        if (c == '.') {
+            return new Token(TokenClass.DOT, line, column);
         }
 
         // if we reach this point, it means we did not recognise a valid token
