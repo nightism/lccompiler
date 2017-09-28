@@ -58,12 +58,41 @@ public class Tokeniser {
         if (Character.isWhitespace(c))
             return next();
 
-        // recognises the plus operator
+        /****** skip the comments ******/
+        if (c == '/') {
+            if (scanner.peek() == '/') {
+                char nextOne = scanner.next();
+                while (nextOne != EOF) {
+                    nextOne = scanner.next();
+                }
+                return next();
+            } else if (scanner.peek() == '*') {
+                char nextOne = scanner.next();
+                while (!(nextOne == '*' && scanner.peek() == '/') {
+                    nextOne = scanner.next();
+                }
+                scanner.next();
+                return next();
+            }
+        }
+
+
+
+        /****** recognises the arithmetic operator ******/
         if (c == '+')
             return new Token(TokenClass.PLUS, line, column);
 
         if (c == '-')
             return new Token(TokenClass.MINUS, line, column);
+
+        if (c == '*')
+            return new Token(TokenClass.ASTERIX, line, column);
+
+        if (c == '/' && !(scanner.peek() == '/') && !(scanner.peek() == '*'))
+            return new Token(TokenClass.DIV, line, column);
+
+        if (c == '%')
+            return new Token(TokenClass.REM, line, column);
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
@@ -72,3 +101,30 @@ public class Tokeniser {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
