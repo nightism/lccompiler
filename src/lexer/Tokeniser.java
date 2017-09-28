@@ -54,21 +54,22 @@ public class Tokeniser {
         // get the next character
         char c = scanner.next();
 
-        // skip white spaces
-        if (Character.isWhitespace(c))
+        // skip white spaces, carriage return (\r) and line feed (\n)
+        if (Character.isWhitespace(c)) {
             return next();
+        }
 
         /****** skip the comments ******/
         if (c == '/') {
             if (scanner.peek() == '/') {
                 char nextOne = scanner.next();
-                while (nextOne != EOF) {
+                while (!(nextOne == '\n' || nextOne == '\r')) {
                     nextOne = scanner.next();
                 }
                 return next();
             } else if (scanner.peek() == '*') {
                 char nextOne = scanner.next();
-                while (!(nextOne == '*' && scanner.peek() == '/') {
+                while (!(nextOne == '*' && scanner.peek() == '/')) {
                     nextOne = scanner.next();
                 }
                 scanner.next();
@@ -76,23 +77,41 @@ public class Tokeniser {
             }
         }
 
-
+        /****** recognises the header files ******/
+        // TODO need to be refined
+        if (c == '#') {
+            int thisCol = column;
+            String includeToken = Character.toString(c);
+            char nextOne = scanner.next();
+            while (!Character.isWhitespace(nextOne)) {
+                includeToken = includeToken + Character. toString(nextOne);
+                nextOne = scanner.next();
+            }
+            if (includeToken.equals("#include")) {
+                return new Token(TokenClass.INCLUDE, line, thisCol);
+            }
+        }
 
         /****** recognises the arithmetic operator ******/
-        if (c == '+')
+        if (c == '+') {
             return new Token(TokenClass.PLUS, line, column);
+        }
 
-        if (c == '-')
+        if (c == '-') {
             return new Token(TokenClass.MINUS, line, column);
+        }
 
-        if (c == '*')
+        if (c == '*') {
             return new Token(TokenClass.ASTERIX, line, column);
+        }
 
-        if (c == '/' && !(scanner.peek() == '/') && !(scanner.peek() == '*'))
+        if (c == '/' && scanner.peek() != '/' && scanner.peek() != '*') {
             return new Token(TokenClass.DIV, line, column);
+        }
 
-        if (c == '%')
+        if (c == '%') {
             return new Token(TokenClass.REM, line, column);
+        }
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
