@@ -92,13 +92,46 @@ public class Tokeniser {
             }
         }
 
+        /****** recognises the delimiters ******/
+        if (c == '{') {
+            return new Token(TokenClass.LBRA, line, column);
+        }
+
+        if (c == '}') {
+            return new Token(TokenClass.RBRA, line, column);
+        }
+
+        if (c == '(') {
+            return new Token(TokenClass.LPAR, line, column);
+        }
+
+        if (c == ')') {
+            return new Token(TokenClass.RPAR, line, column);
+        }
+
+        if (c == '[') {
+            return new Token(TokenClass.LSBR, line, column);
+        }
+
+        if (c == ']') {
+            return new Token(TokenClass.RSBR, line, column);
+        }
+
+        if (c == ';') {
+            return new Token(TokenClass.SC, line, column);
+        }
+
+        if (c == ',') {
+            return new Token(TokenClass.COMMA, line, column);
+        }
+
         /****** recognises the assignment operator and comparison operator ******/
         if (c == '=') {
             if (scanner.peek() == '=') {
                 scanner.next();
                 return new Token(TokenClass.EQ, line, column);
             } else {
-                return new Token(TokenClass.EQ, line, column)
+                return new Token(TokenClass.EQ, line, column);
             }
         }
 
