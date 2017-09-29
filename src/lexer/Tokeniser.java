@@ -228,8 +228,8 @@ public class Tokeniser {
     }
 
     /**
-    *   @desc this function will read and accumulate the characters into String 
-    *         until \" is met in one single line. 
+    *   @desc this function will read and accumulate the characters into String
+    *         until \" is met in one single line.
     */
     private String readString() throws EoLException, IOException {
         try {
@@ -257,31 +257,14 @@ public class Tokeniser {
         }
     }
 
+    private String readWord() throws EoLException, IOException {
+        try {
+          char thisOne = scanner.next();
+          String resultString = "";
+        }
+
+
+
+    }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
