@@ -10,6 +10,9 @@ import java.io.IOException;
  */
 public class Tokeniser {
 
+    private class EoLException extends Exception {
+    }
+
     private Scanner scanner;
 
     private int error = 0;
@@ -194,15 +197,63 @@ public class Tokeniser {
             return new Token(TokenClass.DOT, line, column);
         }
 
+        /****** recognises string ******/
+        if (c == '\"') {
+            // TODO to be finished
+            String stringData;
+            try {
+                stringData = readString();
+                return new Token(TokenClass.STRING_LITERAL, stringData, line, column);
+            } catch (EoLException eol) {
+                error(c, line, column);
+                return new Token(TokenClass.INVALID, line, column);
+            }
+        }
+
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
         return new Token(TokenClass.INVALID, line, column);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// Utility functions //////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+
     private void skipLine() throws IOException {
         char nextOne = scanner.next();
         while (!(nextOne == '\n' || nextOne == '\r')) {
             nextOne = scanner.next();
+        }
+    }
+
+    /**
+    *   @desc this function will read and accumulate the characters into String 
+    *         until \" is met in one single line. 
+    */
+    private String readString() throws EoLException, IOException {
+        try {
+            char thisOne = scanner.next();
+            String resultString = "";
+
+            while (thisOne != '\"') {
+                if (thisOne == '\n' || thisOne == '\r') {
+                    throw new EoLException();
+                }
+
+                resultString = resultString + Character.toString(thisOne);
+
+                if (thisOne == '\\') {
+                    // encounter escape char
+                    resultString = resultString + Character.toString(scanner.next());
+                }
+
+                thisOne = scanner.next();
+            }
+
+            return resultString;
+        } catch (EOFException eof) {
+            throw new EoLException();
         }
     }
 
