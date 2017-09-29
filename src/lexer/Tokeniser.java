@@ -10,7 +10,7 @@ import java.io.IOException;
  */
 public class Tokeniser {
 
-    private class EoLException extends Exception {
+    private class EOLException extends Exception {
     }
 
     private Scanner scanner;
@@ -90,7 +90,6 @@ public class Tokeniser {
                 nextOne = scanner.next();
             }
             if (includeToken.equals("#include")) {
-                // TODO need to check whether the following is a valid string
                 return new Token(TokenClass.INCLUDE, line, thisCol);
             }
         }
@@ -199,14 +198,52 @@ public class Tokeniser {
 
         /****** recognises string ******/
         if (c == '\"') {
-            // TODO to be finished
             String stringData;
             try {
                 stringData = readString();
                 return new Token(TokenClass.STRING_LITERAL, stringData, line, column);
-            } catch (EoLException eol) {
+            } catch (EOLException eol) {
                 error(c, line, column);
                 return new Token(TokenClass.INVALID, line, column);
+            }
+        }
+
+        /****** recognises keywords and identifier ******/
+        if (Character.isLetter(c) || c == '_') {
+            String target = Character.toString(c) + readWord();
+
+            if (target.equals("int")) {
+                return new Token(TokenClass.INT, line, column);
+            } else if (target.equals("char")) {
+                return new Token(TokenClass.CHAR, line, column);
+            } else if (target.equals("void")) {
+                return new Token(TokenClass.VOID, line, column);
+            } else if (target.equals("if")) {
+                return new Token(TokenClass.IF, line, column);
+            } else if (target.equals("else")) {
+                return new Token(TokenClass.ELSE, line, column);
+            } else if (target.equals("while")) {
+                return new Token(TokenClass.WHILE, line, column);
+            } else if (target.equals("return")) {
+                return new Token(TokenClass.RETURN, line, column);
+            } else if (target.equals("struct")) {
+                return new Token(TokenClass.STRUCT, line, column);
+            } else if (target.equals("sizeof")) {
+                return new Token(TokenClass.SIZEOF, line, column);
+            } else {
+                return new Token(TokenClass.IDENTIFIER, line, column);
+            }
+        }
+
+        /****** recognises numbers ******/
+        if (Character.isDigit(c)) {
+            String target = readNumber();
+            if (target == null) {
+                error(c, line, column);
+                return new Token(TokenClass.INVALID, line, column);
+            } else {
+                target = c + target;
+                return new Token(TokenClass.INT_LITERAL, line, column);
             }
         }
 
@@ -227,18 +264,28 @@ public class Tokeniser {
         }
     }
 
+    private boolean checkEOL() throws IOException {
+        char thisOne = scanner.next();
+        while (thisOne != '\n' && thisOne != '\r') {
+            if (!Character.isWhitespace(thisOne)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
     *   @desc this function will read and accumulate the characters into String
     *         until \" is met in one single line.
     */
-    private String readString() throws EoLException, IOException {
+    private String readString() throws EOLException, IOException {
         try {
             char thisOne = scanner.next();
             String resultString = "";
 
             while (thisOne != '\"') {
                 if (thisOne == '\n' || thisOne == '\r') {
-                    throw new EoLException();
+                    throw new EOLException();
                 }
 
                 resultString = resultString + Character.toString(thisOne);
@@ -253,18 +300,28 @@ public class Tokeniser {
 
             return resultString;
         } catch (EOFException eof) {
-            throw new EoLException();
+            throw new EOLException();
         }
     }
 
-    private String readWord() throws EoLException, IOException {
-        try {
-          char thisOne = scanner.next();
-          String resultString = "";
+    private String readWord() throws IOException {
+        String result = "";
+        while (Character.isLetter(scanner.peek()) || Character.isDigit(scanner.peek()) || scanner.peek() == '_') {
+            result = result + Character.toString(scanner.next());
         }
-
-
-
+        return result;
     }
 
+    private String readNumber() throws IOException {
+        String result = "";
+        boolean invalid = false;
+        while (Character.isLetter(scanner.peek()) || Character.isDigit(scanner.peek()) || scanner.peek() == '_') {
+            char thisOne = scanner.next();
+            result = result + Character.toString(thisOne);
+            if (!invalid && !Character.isDigit(thisOne)) {
+                invalid = true;
+            }
+        }
+        return (invalid ? null : result);
+    }
 }
