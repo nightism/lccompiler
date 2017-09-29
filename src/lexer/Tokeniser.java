@@ -208,6 +208,53 @@ public class Tokeniser {
             }
         }
 
+        /****** recognises characters ******/
+        if (c == '\'') {
+            char nextOne = scanner.peek();
+            if (nextOne == '\n' || nextOne == '\r' || nextOne == -1) {
+            // unqoted and undefined char
+                error(c, line, column);
+                return new Token(TokenClass.INVALID, line, column);
+            } else if (nextOne == '\\') {
+            // special character
+                String target = Character.toString(nextOne);
+                scanner.next();
+                nextOne = scanner.next();
+
+                if (nextOne == 't' || nextOne == 'b' || nextOne == 'n' || nextOne == 'r' || nextOne == 'f'
+                    || nextOne == '\'' || nextOne == '\\' || nextOne == '\"' ) {
+                // existing characters
+                    if (!readUntilApostrophe()) {
+                    // more than one characters encountered between apostrophe
+                        error(c, line, column);
+                        return new Token(TokenClass.INVALID, line, column);
+                    } else {
+                    // correct return with special character
+                        return new Token(TokenClass.CHAR_LITERAL, target + nextOne, line, column);
+                    }
+                } else {
+                // non-existing characters
+                    readUntilApostrophe();
+                    error(c, line, column);
+                    return new Token(TokenClass.INVALID, line, column);
+                }
+            } else {
+            // normal character
+                String target = Character.toString(nextOne);
+                scanner.next();
+
+                if (!readUntilApostrophe()) {
+                // more than one characters encountered between apostrophe
+                    error(c, line, column);
+                    return new Token(TokenClass.INVALID, line, column);
+                } else {
+                // correct return with normal character
+                    return new Token(TokenClass.CHAR_LITERAL, target, line, column);
+                }
+            }
+
+        }
+
         /****** recognises keywords and identifier ******/
         if (Character.isLetter(c) || c == '_') {
             String target = Character.toString(c) + readWord();
@@ -231,7 +278,7 @@ public class Tokeniser {
             } else if (target.equals("sizeof")) {
                 return new Token(TokenClass.SIZEOF, line, column);
             } else {
-                return new Token(TokenClass.IDENTIFIER, line, column);
+                return new Token(TokenClass.IDENTIFIER, target, line, column);
             }
         }
 
@@ -274,10 +321,16 @@ public class Tokeniser {
         return true;
     }
 
-    /**
-    *   @desc this function will read and accumulate the characters into String
-    *         until \" is met in one single line.
-    */
+    private boolean readUntilApostrophe() throws IOException {
+        boolean result = true;
+        while (scanner.peek() != '\'' && scanner.peek() != '\n' && scanner.peek() != '\r') {
+            result = false;
+            scanner.next();
+        }
+        scanner.next();
+        return result;
+    }
+
     private String readString() throws EOLException, IOException {
         try {
             char thisOne = scanner.next();
