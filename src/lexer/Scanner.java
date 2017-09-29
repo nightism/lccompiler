@@ -9,6 +9,7 @@ public class Scanner {
 
     private BufferedReader input;
     private int peeked = -1;
+    private int current = -1;
 
     private int line = 1;
     private int column = 1;
@@ -57,7 +58,13 @@ public class Scanner {
         } else {
             column++;
         }
+
+        current = (int) r;
         return r;
+    }
+
+    public char cursor() {
+        return (char) current;
     }
 
     public void close() throws IOException {
