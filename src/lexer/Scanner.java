@@ -63,6 +63,9 @@ public class Scanner {
         return r;
     }
 
+    /**
+    * @author myiking
+    */
     public char cursor() {
         return (char) current;
     }

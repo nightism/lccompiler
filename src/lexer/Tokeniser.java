@@ -7,6 +7,7 @@ import java.io.IOException;
 
 /**
  * @author cdubach
+ * @authot myiking
  */
 public class Tokeniser {
 

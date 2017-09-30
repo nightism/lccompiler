@@ -10,6 +10,7 @@ import java.util.Queue;
 
 /**
  * @author cdubach
+ * @author myiking
  */
 public class Parser {
 
