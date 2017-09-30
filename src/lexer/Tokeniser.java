@@ -78,9 +78,10 @@ public class Tokeniser {
                     return new Token(TokenClass.INVALID, line, column);
                 }
             }
-        }
+        }   
 
-        /****** recognises the header files ******/ if (c == '#') {
+        /****** recognises the header files ******/
+        if (c == '#') {
             int thisCol = column;
             String includeToken = Character.toString(c);
             char nextOne = scanner.next();
