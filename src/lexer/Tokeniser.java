@@ -65,6 +65,7 @@ public class Tokeniser {
                 skipLine();
                 return next();
             } else if (scanner.peek() == '*') {
+                scanner.next();
                 try{
                     char nextOne = scanner.next();
                     while (!(nextOne == '*' && scanner.peek() == '/')) {
@@ -79,9 +80,7 @@ public class Tokeniser {
             }
         }
 
-        /****** recognises the header files ******/
-        // TODO need to be refined
-        if (c == '#') {
+        /****** recognises the header files ******/ if (c == '#') {
             int thisCol = column;
             String includeToken = Character.toString(c);
             char nextOne = scanner.next();
