@@ -126,6 +126,9 @@ public class Parser {
         return result;
     }
 
+    private boolean acceptType() {
+        return accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
+    }
 
     /**
     * Starts parsing
@@ -147,6 +150,10 @@ public class Parser {
         }
     }
 
+    /************************************/
+    /********** Kleene closure **********/
+    /************************************/
+
     private void parseStructDecls() {
         while (accept(TokenClass.STRUCT)) {
             nextToken();
@@ -159,11 +166,21 @@ public class Parser {
     }
 
     private void parseVarDecls() {
-        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT)) {
+        while (acceptType()) {
             if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.SC)) {
                 parseType();
                 expect(TokenClass.IDENTIFIER);
-                expect(TokenClass.SC);
+
+                if (accept(TokenClass.SC)) {
+                    expect(TokenClass.SC);
+                } else if (accept(TokenClass.LSBR)) {
+                    expect(TokenClass.LSBR);
+                    expect(TokenClass.INT_LITERAL);
+                    expect(TokenClass.RSBR);
+                    expect(TokenClass.SC);
+                } else {
+                    break;
+                }
             } else {
                 break;
             }
@@ -171,7 +188,7 @@ public class Parser {
     }
 
     private void parseFunDecls() {
-        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT)) {
+        while (acceptType()) {
             if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.LPAR)) {
                 parseType();
                 expect(TokenClass.IDENTIFIER);
@@ -185,14 +202,43 @@ public class Parser {
         }
     }
 
+    private void parseStmt() {
+        while(true) {
+            if (accept(TokenClass.LBRA)) {
+                parseBlk();
+            } else if (accept(TokenClass.WHILE)) {
+                // TODO
+            } else if (accept(TokenClass.IF)) {
+                // TODO
+            } else if (accept(TokenClass.RETURN)) {
+                // TODO
+            } else {
+                // TODO encounter expression
+            }
+            break;
+        }
+    }
+
+    /************************************/
+    /********* Positive closure *********/
+    /************************************/
+
     private void parseParamLst() {
-        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
-            //TODO
+        if (acceptType()) {
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            while (accept(TokenClass.COMMA)) {
+                parseType();
+                expect(TokenClass.IDENTIFIER);
+            }
         }
     }
 
     private void parseBlk() {
-        // TODO
+        expect(TokenClass.LBRA);
+        parseVarDecls();
+        parseStmt();
+        expect(TokenClass.RBRA);
     }
 
     private void parseType() {
