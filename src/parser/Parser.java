@@ -195,7 +195,7 @@ public class Parser {
         // TODO
     }
 
-    private boolean parseType() {
+    private void parseType() {
         if(accept(TokenClass.STRUCT)) {
             parseStructType();
         } else {
@@ -207,7 +207,7 @@ public class Parser {
         }
     }
 
-    private boolean parseStructType() {
+    private void parseStructType() {
         expect(TokenClass.STRUCT);
         expect(TokenClass.IDENTIFIER);
     }
