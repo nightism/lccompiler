@@ -73,11 +73,13 @@ public class Tokeniser {
                         nextOne = scanner.next();
                     }
                     scanner.next();
-                    return next();
                 } catch (EOFException eof) {
                     error(c, line, column);
                     return new Token(TokenClass.INVALID, line, column);
                 }
+                return next();
+            } else {
+                return new Token(TokenClass.DIV, line, column);
             }
         }   
 
