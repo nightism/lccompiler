@@ -127,6 +127,9 @@ public class Parser {
     }
 
 
+    /**
+    * Starts parsing
+    */
     private void parseProgram() {
         parseIncludes();
         parseStructDecls();
@@ -156,10 +159,9 @@ public class Parser {
     }
 
     private void parseVarDecls() {
-        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
-            if (match(lookAhead(1), TokenClass.IDENTIFIER)
-                && match(lookAhead(2), TokenClass.SC)) {
-                nextToken();
+        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT)) {
+            if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.SC)) {
+                parseType();
                 expect(TokenClass.IDENTIFIER);
                 expect(TokenClass.SC);
             } else {
@@ -169,10 +171,9 @@ public class Parser {
     }
 
     private void parseFunDecls() {
-        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
-            if (match(lookAhead(1), TokenClass.IDENTIFIER)
-                && match(lookAhead(2), TokenClass.LPAR)) {
-                nextToken();
+        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT)) {
+            if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.LPAR)) {
+                parseType();
                 expect(TokenClass.IDENTIFIER);
                 expect(TokenClass.LPAR);
                 parseParamLst();
@@ -185,10 +186,29 @@ public class Parser {
     }
 
     private void parseParamLst() {
-        // TODO
+        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
+            //TODO
+        }
     }
 
     private void parseBlk() {
         // TODO
+    }
+
+    private boolean parseType() {
+        if(accept(TokenClass.STRUCT)) {
+            parseStructType();
+        } else {
+            expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
+        }
+
+        if (accept(TokenClass.ASTERIX)) {
+            expect(TokenClass.ASTERIX);
+        }
+    }
+
+    private boolean parseStructType() {
+        expect(TokenClass.STRUCT);
+        expect(TokenClass.IDENTIFIER);
     }
 }
