@@ -82,7 +82,6 @@ public class Parser {
         return null;
     }
 
-
     /*
      * Consumes the next token from the tokeniser or the buffer if not empty.
      */
@@ -120,6 +119,13 @@ public class Parser {
         return result;
     }
 
+    private boolean match(Token target, TokenClass... expected) {
+        boolean result = false;
+        for (TokenClass e : expected)
+            result |= (e == target.tokenClass);
+        return result;
+    }
+
 
     private void parseProgram() {
         parseIncludes();
@@ -139,16 +145,50 @@ public class Parser {
     }
 
     private void parseStructDecls() {
-        // to be completed ...
+        while (accept(TokenClass.STRUCT)) {
+            nextToken();
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.LBRA);
+            parseVarDecls();
+            expect(TokenClass.RBRA);
+            expect(TokenClass.SC);
+        }
     }
 
     private void parseVarDecls() {
-        // to be completed ...
+        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
+            if (match(lookAhead(1), TokenClass.IDENTIFIER)
+                && match(lookAhead(2), TokenClass.SC)) {
+                nextToken();
+                expect(TokenClass.IDENTIFIER);
+                expect(TokenClass.SC);
+            } else {
+                break;
+            }
+        }
     }
 
     private void parseFunDecls() {
-        // to be completed ...
+        while (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
+            if (match(lookAhead(1), TokenClass.IDENTIFIER)
+                && match(lookAhead(2), TokenClass.LPAR)) {
+                nextToken();
+                expect(TokenClass.IDENTIFIER);
+                expect(TokenClass.LPAR);
+                parseParamLst();
+                expect(TokenClass.RPAR);
+                parseBlk();
+            } else {
+                break;
+            }
+        }
     }
 
-    // to be completed ...        
+    private void parseParamLst() {
+        // TODO
+    }
+
+    private void parseBlk() {
+        // TODO
+    }
 }
