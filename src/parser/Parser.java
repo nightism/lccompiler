@@ -263,6 +263,17 @@ public class Parser {
         }
     }
 
+    private void parseReturn() {
+        expect(TokenClass.RETURN);
+
+        // return expression
+        if (!accept(TokenClass.SC)) {
+            parseExp();
+        }
+
+        expect(TokenClass.SC);
+    }
+
     private void parseExp() {
 
         // TODO
