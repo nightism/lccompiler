@@ -204,28 +204,6 @@ public class Parser {
         }
     }
 
-    private void parseStmt() {
-        while(true) {
-            if (accept(TokenClass.LBRA)) {
-                parseBlk();
-            } else if (accept(TokenClass.WHILE)) {
-                // TODO
-
-            } else if (accept(TokenClass.IF)) {
-                // TODO
-
-            } else if (accept(TokenClass.RETURN)) {
-                // TODO
-
-            } else {
-                // TODO encounter expression
-
-            }
-            // TODO
-            break;
-        }
-    }
-
     /************************************/
     /********* Positive closure *********/
     /************************************/
@@ -233,8 +211,31 @@ public class Parser {
     private void parseBlk() {
         expect(TokenClass.LBRA);
         parseVarDecls();
-        parseStmt();
+
+        while (!accept(TokenClass.RBRA)) {
+            parseStmt();
+        }
+
         expect(TokenClass.RBRA);
+    }
+
+    private void parseStmt() {
+        while(true) {
+            if (accept(TokenClass.LBRA)) {
+                parseBlk();
+            } else if (accept(TokenClass.WHILE)) {
+                parseWhileStat();
+            } else if (accept(TokenClass.IF)) {
+                parseIfStat();
+            } else if (accept(TokenClass.RETURN)) {
+                parseReturnStat();
+            } else { // encounter expression
+                // TODO encounter expression
+
+            }
+            // TODO
+            break;
+        }
     }
 
     private void parseWhileStat() {
@@ -263,7 +264,7 @@ public class Parser {
         }
     }
 
-    private void parseReturn() {
+    private void parseReturnStat() {
         expect(TokenClass.RETURN);
 
         // return expression
