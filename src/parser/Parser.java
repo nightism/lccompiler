@@ -172,8 +172,10 @@ public class Parser {
                 expect(TokenClass.IDENTIFIER);
 
                 if (accept(TokenClass.SC)) {
+                // normal variables declaration
                     expect(TokenClass.SC);
                 } else if (accept(TokenClass.LSBR)) {
+                // arrays declaration
                     expect(TokenClass.LSBR);
                     expect(TokenClass.INT_LITERAL);
                     expect(TokenClass.RSBR);
@@ -208,13 +210,18 @@ public class Parser {
                 parseBlk();
             } else if (accept(TokenClass.WHILE)) {
                 // TODO
+
             } else if (accept(TokenClass.IF)) {
                 // TODO
+
             } else if (accept(TokenClass.RETURN)) {
                 // TODO
+
             } else {
                 // TODO encounter expression
+
             }
+            // TODO
             break;
         }
     }
@@ -222,6 +229,44 @@ public class Parser {
     /************************************/
     /********* Positive closure *********/
     /************************************/
+
+    private void parseBlk() {
+        expect(TokenClass.LBRA);
+        parseVarDecls();
+        parseStmt();
+        expect(TokenClass.RBRA);
+    }
+
+    private void parseWhileStat() {
+        // while condition
+        expect(TokenClass.WHILE);
+        expect(TokenClass.LPAR);
+        parseExp();
+        expect(TokenClass.RPAR);
+        // statement
+        parseStmt();
+    }
+
+    private void parseIfStat() {
+        // if condition
+        expect(TokenClass.IF);
+        expect(TokenClass.LPAR);
+        parseExp();
+        expect(TokenClass.RPAR);
+        // statement
+        parseStmt();
+
+        // else statement
+        if (accept(TokenClass.ELSE)) {
+            expect(TokenClass.ELSE);
+            parseStmt();
+        }
+    }
+
+    private void parseExp() {
+
+        // TODO
+    }
 
     private void parseParamLst() {
         if (acceptType()) {
@@ -234,13 +279,6 @@ public class Parser {
         }
     }
 
-    private void parseBlk() {
-        expect(TokenClass.LBRA);
-        parseVarDecls();
-        parseStmt();
-        expect(TokenClass.RBRA);
-    }
-
     private void parseType() {
         if(accept(TokenClass.STRUCT)) {
             parseStructType();
@@ -248,6 +286,7 @@ public class Parser {
             expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
         }
 
+        // if encountering pointer declaration
         if (accept(TokenClass.ASTERIX)) {
             expect(TokenClass.ASTERIX);
         }
