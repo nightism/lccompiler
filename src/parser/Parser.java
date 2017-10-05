@@ -220,21 +220,20 @@ public class Parser {
     }
 
     private void parseStmt() {
-        while(true) {
-            if (accept(TokenClass.LBRA)) {
-                parseBlk();
-            } else if (accept(TokenClass.WHILE)) {
-                parseWhileStat();
-            } else if (accept(TokenClass.IF)) {
-                parseIfStat();
-            } else if (accept(TokenClass.RETURN)) {
-                parseReturnStat();
-            } else { // encounter expression
-                // TODO encounter expression
-
+        if (accept(TokenClass.LBRA)) {
+            parseBlk();
+        } else if (accept(TokenClass.WHILE)) {
+            parseWhileStat();
+        } else if (accept(TokenClass.IF)) {
+            parseIfStat();
+        } else if (accept(TokenClass.RETURN)) {
+            parseReturnStat();
+        } else { // encounter expression
+            parseExp();
+            if (accept(TokenClass.ASSIGN)) {
+                parseExp();
             }
-            // TODO
-            break;
+            expect(TokenClass.SC);
         }
     }
 
