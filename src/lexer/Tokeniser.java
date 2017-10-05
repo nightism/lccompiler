@@ -168,7 +168,7 @@ public class Tokeniser {
                 scanner.next();
                 return new Token(TokenClass.EQ, line, column);
             } else {
-                return new Token(TokenClass.EQ, line, column);
+                return new Token(TokenClass.ASSIGN, line, column);
             }
         }
 
