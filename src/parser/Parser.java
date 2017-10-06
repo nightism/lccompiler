@@ -271,7 +271,7 @@ public class Parser {
 
             expect(TokenClass.RPAR);
         } else if (accept(TokenClass.MINUS)) {
-        // parse negative number expression
+        // parse negative expression
 
             expect(TokenClass.MINUS);
             expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
@@ -279,25 +279,25 @@ public class Parser {
         // parse negative number expression
 
             // test
-            // TODO
+            // TODO to be merged and revised
             // System.out.println(token.data);
             expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
         } else if (accept(TokenClass.CHAR_LITERAL)) {
         // parse character expression
-
+            // TODO to be merged and revised
             expect(TokenClass.CHAR_LITERAL);
         } else if (accept(TokenClass.STRING_LITERAL)) {
         // parse String expression
-
+            // TODO to be merged and revised
             expect(TokenClass.STRING_LITERAL);
         } else if (accept(TokenClass.ASTERIX)) {
         // valueat ::= "*" exp    #### Value at operator (pointer indirection)
-
+            // TODO to be merged and revised
             expect(TokenClass.ASTERIX);
             parseExp();
         } else if (accept(TokenClass.SIZEOF)) {
         // sizeof ::= "sizeof" "(" type ")"
-
+            // TODO to be merged and revised
             expect(TokenClass.SIZEOF);
             expect(TokenClass.LPAR);
             parseType();
@@ -368,6 +368,65 @@ public class Parser {
             expect(TokenCLass.INT_LITERAL);
         }
     }
+    //
+    // private void parseUnaryMinus() {
+    //     expect(TokenClass.MINUS);
+    //     expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
+    // }
+    //
+    //
+    //
+    // private void parseFirstPresident() {
+    //   // TODO
+    //     if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
+    //         expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
+    //     } else {
+    //         if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LPAR)) {
+    //             parseFunCall();
+    //         } else if (accept(TokenClass.IDENTIFIER)) {
+    //             expect(TokenClass.IDENTIFIER);
+    //         }
+    //     }
+    //
+    // }
+    //
+    //
+    // private void parseStructMembAccess() {
+    //     parseExp();
+    //     expect(TokenClass.DOT);
+    //     expect(TokenClass.IDENTIFIER);
+    // }
+    //
+    // private void parseArrAccess() {
+    //     if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LSBR)) {
+    //         expect(TokenClass.IDENTIFIER);
+    //         expect(TokenClass.LSBR);
+    //         parseExp();
+    //         expect(TokenClass.RSBR);
+    //     }
+    // }
+    //
+    // private void parseFunCall() {
+    //     if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LPAR)) {
+    //         expect(TokenClass.IDENTIFIER);
+    //         expect(TokenClass.LPAR);
+    //         parseExp();
+    //
+    //         while (accept(TokenClass.COMMA)) {
+    //             expect(TokenClass.COMMA);
+    //             parseExp();
+    //         }
+    //
+    //         expect(TokenClass.RPAR);
+    //     }
+    // }
+    //
+    // private void parseParExp() {
+    //     if (accept(TokenClass.LPAR)) {
+    //       // TODO
+    //         parseExp(); // LPAR RPAR included
+    //     }
+    // }
 
     private void parseParamLst() {
         if (acceptType()) {
