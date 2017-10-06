@@ -365,7 +365,7 @@ public class Parser {
         if (accept(TokenClass.LPAR)) {
             parseExp();
         } else {
-            expect(TokenCLass.INT_LITERAL);
+            expect(TokenClass.INT_LITERAL);
         }
     }
     //
