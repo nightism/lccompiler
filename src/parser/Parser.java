@@ -356,6 +356,19 @@ public class Parser {
         expect(TokenClass.SC);
     }
 
+    private void parseTerm() {
+        // TODO
+        parseFactor();
+    }
+
+    private void parseFactor() {
+        if (accept(TokenClass.LPAR)) {
+            parseExp();
+        } else {
+            expect(TokenCLass.INT_LITERAL);
+        }
+    }
+
     private void parseParamLst() {
         if (acceptType()) {
             parseType();
