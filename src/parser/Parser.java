@@ -229,11 +229,93 @@ public class Parser {
         } else if (accept(TokenClass.RETURN)) {
             parseReturnStat();
         } else { // encounter expression
+            // TODO bugs here
             parseExp();
+            // System.out.println("test1 " + token.data);
             if (accept(TokenClass.ASSIGN)) {
+                expect(TokenClass.ASSIGN);
                 parseExp();
             }
+            // System.out.println("test3 " + token.data);
             expect(TokenClass.SC);
+        }
+    }
+
+    private void parseExp() {
+        // TODO
+        if (accept(TokenClass.LPAR)) {
+            expect(TokenClass.LPAR);
+            if (acceptType()) {
+            // parse typecase
+
+                parseType();
+                expect(TokenClass.RPAR);
+                parseExp();
+            } else {
+            // parse expression inside parenthesis
+
+                parseExp();
+                expect(TokenClass.RPAR);
+            }
+        } else if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.LPAR)) {
+        // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
+
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.LPAR);
+            parseExp();
+
+            while (accept(TokenClass.COMMA)) {
+                expect(TokenClass.COMMA);
+                parseExp();
+            }
+
+            expect(TokenClass.RPAR);
+        } else if (accept(TokenClass.MINUS)) {
+        // parse negative number expression
+
+            expect(TokenClass.MINUS);
+            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
+        } else if (accept(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL)) {
+        // parse negative number expression
+
+            // test
+            // TODO
+            // System.out.println(token.data);
+            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
+        } else if (accept(TokenClass.CHAR_LITERAL)) {
+        // parse character expression
+
+            expect(TokenClass.CHAR_LITERAL);
+        } else if (accept(TokenClass.STRING_LITERAL)) {
+        // parse String expression
+
+            expect(TokenClass.STRING_LITERAL);
+        } else if (accept(TokenClass.ASTERIX)) {
+        // valueat ::= "*" exp    #### Value at operator (pointer indirection)
+
+            expect(TokenClass.ASTERIX);
+            parseExp();
+        } else if (accept(TokenClass.SIZEOF)) {
+        // sizeof ::= "sizeof" "(" type ")"
+
+            expect(TokenClass.SIZEOF);
+            expect(TokenClass.LPAR);
+            parseType();
+            expect(TokenClass.RPAR);
+        } else {
+        // encounter expressions
+
+            // TODO to be refined
+            // refer to the lecture notes
+            if (accept(TokenClass.DOT)) {
+                expect(TokenClass.DOT);
+                expect(TokenClass.IDENTIFIER);
+            } else {
+                expect(TokenClass.AND, TokenClass.OR, TokenClass.EQ, TokenClass.NE, TokenClass.LT,
+                       TokenClass.GT, TokenClass.LE, TokenClass.GE, TokenClass.PLUS, TokenClass.MINUS,
+                       TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
+                parseExp();
+            }
         }
     }
 
@@ -272,82 +354,6 @@ public class Parser {
         }
 
         expect(TokenClass.SC);
-    }
-
-    private void parseExp() {
-        // TODO
-        if (accept(TokenClass.LPAR)) {
-            expect(TokenClass.LPAR);
-            if (acceptType()) {
-            // parse typecase
-
-                parseType();
-                expect(TokenClass.RPAR);
-                parseExp();
-            } else {
-            // parse expression inside parenthesis
-
-                parseExp();
-                expect(TokenClass.RPAR);
-            }
-        } else if (accept(TokenClass.MINUS)) {
-        // parse negative number expression
-
-            expect(TokenClass.MINUS);
-            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
-        } else if (accept(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL)) {
-        // parse negative number expression
-
-            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
-        } else if (accept(TokenClass.CHAR_LITERAL)) {
-        // parse character expression
-
-            expect(TokenClass.CHAR_LITERAL);
-        } else if (accept(TokenClass.STRING_LITERAL)) {
-        // parse String expression
-
-            expect(TokenClass.STRING_LITERAL);
-        } else if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.LPAR)) {
-        // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
-
-            expect(TokenClass.IDENTIFIER);
-            expect(TokenClass.LPAR);
-            parseExp();
-
-            while (accept(TokenClass.COMMA)) {
-                parseExp();
-            }
-
-            expect(TokenClass.RPAR);
-        } else if (accept(TokenClass.ASTERIX)) {
-        // valueat ::= "*" exp    #### Value at operator (pointer indirection)
-
-            expect(TokenClass.ASTERIX);
-            parseExp();
-        } else if (accept(TokenClass.SIZEOF)) {
-        // sizeof ::= "sizeof" "(" type ")"
-
-            expect(TokenClass.SIZEOF);
-            expect(TokenClass.LPAR);
-            parseType();
-            expect(TokenClass.RPAR);
-        } else {
-        // encounter expressions
-
-            // TODO to be refined
-            parseExp();
-
-            if (accept(TokenClass.AND, TokenClass.OR, TokenClass.EQ, TokenClass.NE, TokenClass.LT,
-                       TokenClass.GT, TokenClass.LE, TokenClass.GE, TokenClass.PLUS, TokenClass.MINUS,
-                       TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM))
-            {
-                nextToken();
-                parseExp();
-            } else if (accept(TokenClass.DOT)) {
-                expect(TokenClass.DOT);
-                expect(TokenClass.IDENTIFIER);
-            }
-        }
     }
 
     private void parseParamLst() {
