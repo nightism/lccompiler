@@ -154,65 +154,72 @@ public class Parser {
         }
     }
 
-    /************************************/
-    /********** Kleene closure **********/
-    /************************************/
+    /***************************************************/
+    /********** PARSE BASIC PROGRAM STRUCTURE **********/
+    /***************************************************/
 
     private void parseStructDecls() {
-        while (accept(TokenClass.STRUCT)) {
+        if (accept(TokenClass.STRUCT)
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.LBRA)) {
+            
             nextToken();
             expect(TokenClass.IDENTIFIER);
             expect(TokenClass.LBRA);
             parseVarDecls();
             expect(TokenClass.RBRA);
             expect(TokenClass.SC);
+
+            parseStructDecls();
         }
     }
 
     private void parseVarDecls() {
-        while (acceptType()) {
-            if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.SC)) {
-                parseType();
-                expect(TokenClass.IDENTIFIER);
+        if (acceptType()
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.SC)) {
 
-                if (accept(TokenClass.SC)) {
-                // normal variables declaration
-                    expect(TokenClass.SC);
-                } else if (accept(TokenClass.LSBR)) {
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            
+            if (accept(TokenClass.LSBR)) {
                 // arrays declaration
-                    expect(TokenClass.LSBR);
-                    expect(TokenClass.INT_LITERAL);
-                    expect(TokenClass.RSBR);
-                    expect(TokenClass.SC);
-                } else {
-                    break;
-                }
+                expect(TokenClass.LSBR);
+                expect(TokenClass.INT_LITERAL);
+                expect(TokenClass.RSBR);
+                expect(TokenClass.SC);
             } else {
-                break;
+                // normal variables declaration
+                expect(TokenClass.SC);
             }
+
+            parseVarDecls();
         }
     }
 
     private void parseFunDecls() {
-        while (acceptType()) {
-            if (match(lookAhead(1), TokenClass.IDENTIFIER) && match(lookAhead(2), TokenClass.LPAR)) {
-                parseType();
-                expect(TokenClass.IDENTIFIER);
-                expect(TokenClass.LPAR);
-                if (!accept(TokenClass.RPAR)) {
-                    parseParamLst();
-                }
-                expect(TokenClass.RPAR);
-                parseBlk();
-            } else {
-                break;
+        if (acceptType()
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.LPAR)) {
+
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.LPAR);
+
+            if (!accept(TokenClass.RPAR)) {
+                parseParamLst();
             }
+
+            expect(TokenClass.RPAR);
+            parseBlk();
+
+            parseFunDecls();
         }
     }
 
-    /************************************/
-    /********* Positive closure *********/
-    /************************************/
+    /******************************************/
+    /********* PARSE INSIDE STRUCTURE *********/
+    /******************************************/
 
     private void parseBlk() {
         expect(TokenClass.LBRA);
