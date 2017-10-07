@@ -276,11 +276,8 @@ public class Parser {
             expect(TokenClass.MINUS);
             expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
         } else if (accept(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL)) {
-        // parse negative number expression
+        // parse positive expression
 
-            // test
-            // TODO to be merged and revised
-            // System.out.println(token.data);
             expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
         } else if (accept(TokenClass.CHAR_LITERAL)) {
         // parse character expression
@@ -356,86 +353,140 @@ public class Parser {
         expect(TokenClass.SC);
     }
 
-    private void parseTerm() {
-        // TODO
-        parseFactor();
-    }
-
-    private void parseFactor() {
-        if (accept(TokenClass.LPAR)) {
-            parseExp();
-        } else {
-            expect(TokenClass.INT_LITERAL);
+    private void parseSecondaryLogicalTerm() {
+        parsePrimaryLogicalTerm();
+        if (accept(TokenClass.OR)) {
+            expect(TokenClass.OR);
+            parseSecondaryLogicalTerm();
         }
     }
-    //
-    // private void parseUnaryMinus() {
-    //     expect(TokenClass.MINUS);
-    //     expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
-    // }
-    //
-    //
-    //
-    // private void parseFirstPresident() {
-    //   // TODO
-    //     if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
-    //         expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
-    //     } else {
-    //         if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LPAR)) {
-    //             parseFunCall();
-    //         } else if (accept(TokenClass.IDENTIFIER)) {
-    //             expect(TokenClass.IDENTIFIER);
-    //         }
-    //     }
-    //
-    // }
-    //
-    //
-    // private void parseStructMembAccess() {
-    //     parseExp();
-    //     expect(TokenClass.DOT);
-    //     expect(TokenClass.IDENTIFIER);
-    // }
-    //
-    // private void parseArrAccess() {
-    //     if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LSBR)) {
-    //         expect(TokenClass.IDENTIFIER);
-    //         expect(TokenClass.LSBR);
-    //         parseExp();
-    //         expect(TokenClass.RSBR);
-    //     }
-    // }
-    //
-    // private void parseFunCall() {
-    //     if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.TokenClass.LPAR)) {
-    //         expect(TokenClass.IDENTIFIER);
-    //         expect(TokenClass.LPAR);
-    //         parseExp();
-    //
-    //         while (accept(TokenClass.COMMA)) {
-    //             expect(TokenClass.COMMA);
-    //             parseExp();
-    //         }
-    //
-    //         expect(TokenClass.RPAR);
-    //     }
-    // }
-    //
-    // private void parseParExp() {
-    //     if (accept(TokenClass.LPAR)) {
-    //       // TODO
-    //         parseExp(); // LPAR RPAR included
-    //     }
-    // }
+
+    private void parsePrimaryLogicalTerm() {
+        parseSecondaryRelationalTerm();
+        if (accept(TokenClass.AND)) {
+            expect(TokenClass.AND);
+            parsePrimaryLogicalTerm();
+        }
+    }
+
+    private void parseSecondaryRelationalTerm() {
+        parsePrimaryRelationalTerm();
+        if (accept(TokenClass.EQ, TokenClass.NE)) {
+            expect(TokenClass.EQ, TokenClass.NE);
+            parseSecondaryRelationalTerm();
+        }
+    }
+
+    private void parsePrimaryRelationalTerm() {
+        parseSecondaryArithmeticTerm();
+        if (accept(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE)) {
+            expect(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE);
+            parsePrimaryRelationalTerm();
+        }
+    }
+
+    private void parseSecondaryArithmeticTerm() {
+        parsePrimaryArithmeticTerm();
+        if (accept(TokenClass.PLUS, TokenClass.MINUS)) {
+            expect(TokenClass.PLUS, TokenClass.MINUS);
+            parseSecondaryArithmeticTerm();
+        }
+    }
+
+
+    private void parsePrimaryArithmeticTerm() {
+        parseSecondaryFactor();
+        if (accept(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM)) {
+            expect(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
+            parsePrimaryArithmeticTerm();
+        }
+    }
+
+    private void parseSecondaryFactor() {
+        if (accept(TokenClass.MINUS)) {
+            // Unary Minus
+            expect(TokenClass.MINUS);
+            parseSecondaryFactor();
+        } else if (accept(TokenClass.ASTERIX)) {
+            // Pointer indirection
+            expect(TokenClass.ASTERIX);
+            parseSecondaryFactor();
+        } else if (accept(TokenClass.LPAR)
+                   && match(lookAhead(1), TokenClass.IDENTIFIER)
+                   && match(lookAhead(2), TokenClass.RPAR) ) {
+            // Type cast
+            expect(TokenClass.LPAR);
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.RPAR);
+            parseSecondaryFactor();
+        } else {
+            parsePrimaryFactor();
+        }
+    }
+
+    private void parsePrimaryFactor() {
+        parseBaseFactor();
+        parsePrimaryFactorOperator();
+    }
+
+    private void parsePrimaryFactorOperator() {
+        if (accept(TokenClass.DOT)) {
+            // parse fieldaccess
+            expect(TokenClass.DOT);
+            expect(TokenClass.IDENTIFIER);
+            parsePrimaryFactorOperator();
+        } else if (accept(TokenClass.LSBR)) {
+            // parse arrayaccess
+            expect(TokenClass.LSBR);
+            parseExp();
+            expect(TokenClass.RSBR);
+            parsePrimaryFactorOperator();
+        }
+    }
+
+    private void parseBaseFactor() {
+        if (accept(TokenClass.LPAR)) {
+            // parse expression inside parenthesis
+            parseExp();
+            expect(TokenClass.RPAR);
+        } else if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
+            // parse literal factors
+            expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
+        } else if (accept(TokenClass.SIZEOF)) {
+            // parse sizeof(type)
+            // sizeof ::= "sizeof" "(" type ")"
+            expect(TokenClass.SIZEOF);
+            expect(TokenClass.LPAR);
+            parseType();
+            expect(TokenClass.RPAR);
+        } else if (accept(TokenClass.IDENTIFIER)) {
+            // parse identifier
+            expect(TokenClass.IDENTIFIER);
+            if (accept(TokenClass.LBRA)) {
+                // parse function call
+                // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
+                expect(TokenClass.LBRA);
+                if (!accept(TokenClass.RPAR)) {
+                    parseFuncallParamLst();
+                }
+                expect(TokenClass.RBRA);
+            }
+        }
+    }
+
+    private void parseFuncallParamLst() {
+        parseExp();
+        if (accept(TokenClass.COMMA)) {
+            expect(TokenClass.COMMA);
+            parseFuncallParamLst();
+        }
+    }
 
     private void parseParamLst() {
-        if (acceptType()) {
-            parseType();
-            expect(TokenClass.IDENTIFIER);
-            while (accept(TokenClass.COMMA)) {
-                parseType();
-                expect(TokenClass.IDENTIFIER);
-            }
+        parseType();
+        expect(TokenClass.IDENTIFIER);
+        if (accept(TokenClass.COMMA)) {
+            parseParamLst();
         }
     }
 
