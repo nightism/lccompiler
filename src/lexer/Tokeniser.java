@@ -173,6 +173,7 @@ public class Tokeniser {
         }
 
         if (c == '!' && scanner.peek() == '=') {
+            scanner.next();
             return new Token(TokenClass.NE, line, column);
         }
 

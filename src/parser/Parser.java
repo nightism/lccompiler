@@ -421,6 +421,7 @@ public class Parser {
         parseType();
         expect(TokenClass.IDENTIFIER);
         if (accept(TokenClass.COMMA)) {
+            expect(TokenClass.COMMA);
             parseParamLst();
         }
     }
