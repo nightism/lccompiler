@@ -130,6 +130,10 @@ public class Parser {
         return accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
     }
 
+    private boolean matchType(Token target) {
+        return match(target, TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
+    }
+
     /**
     * Starts parsing
     */
@@ -195,7 +199,9 @@ public class Parser {
                 parseType();
                 expect(TokenClass.IDENTIFIER);
                 expect(TokenClass.LPAR);
-                parseParamLst();
+                if (!accept(TokenClass.RPAR)) {
+                    parseParamLst();
+                }
                 expect(TokenClass.RPAR);
                 parseBlk();
             } else {
@@ -229,90 +235,12 @@ public class Parser {
         } else if (accept(TokenClass.RETURN)) {
             parseReturnStat();
         } else { // encounter expression
-            // TODO bugs here
             parseExp();
-            // System.out.println("test1 " + token.data);
             if (accept(TokenClass.ASSIGN)) {
                 expect(TokenClass.ASSIGN);
                 parseExp();
             }
-            // System.out.println("test3 " + token.data);
             expect(TokenClass.SC);
-        }
-    }
-
-    private void parseExp() {
-        // TODO
-        if (accept(TokenClass.LPAR)) {
-            expect(TokenClass.LPAR);
-            if (acceptType()) {
-            // parse typecase
-
-                parseType();
-                expect(TokenClass.RPAR);
-                parseExp();
-            } else {
-            // parse expression inside parenthesis
-
-                parseExp();
-                expect(TokenClass.RPAR);
-            }
-        } else if (accept(TokenClass.IDENTIFIER) && match(lookAhead(1), TokenClass.LPAR)) {
-        // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
-
-            expect(TokenClass.IDENTIFIER);
-            expect(TokenClass.LPAR);
-            parseExp();
-
-            while (accept(TokenClass.COMMA)) {
-                expect(TokenClass.COMMA);
-                parseExp();
-            }
-
-            expect(TokenClass.RPAR);
-        } else if (accept(TokenClass.MINUS)) {
-        // parse negative expression
-
-            expect(TokenClass.MINUS);
-            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
-        } else if (accept(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL)) {
-        // parse positive expression
-
-            expect(TokenClass.IDENTIFIER, TokenClass.INT_LITERAL);
-        } else if (accept(TokenClass.CHAR_LITERAL)) {
-        // parse character expression
-            // TODO to be merged and revised
-            expect(TokenClass.CHAR_LITERAL);
-        } else if (accept(TokenClass.STRING_LITERAL)) {
-        // parse String expression
-            // TODO to be merged and revised
-            expect(TokenClass.STRING_LITERAL);
-        } else if (accept(TokenClass.ASTERIX)) {
-        // valueat ::= "*" exp    #### Value at operator (pointer indirection)
-            // TODO to be merged and revised
-            expect(TokenClass.ASTERIX);
-            parseExp();
-        } else if (accept(TokenClass.SIZEOF)) {
-        // sizeof ::= "sizeof" "(" type ")"
-            // TODO to be merged and revised
-            expect(TokenClass.SIZEOF);
-            expect(TokenClass.LPAR);
-            parseType();
-            expect(TokenClass.RPAR);
-        } else {
-        // encounter expressions
-
-            // TODO to be refined
-            // refer to the lecture notes
-            if (accept(TokenClass.DOT)) {
-                expect(TokenClass.DOT);
-                expect(TokenClass.IDENTIFIER);
-            } else {
-                expect(TokenClass.AND, TokenClass.OR, TokenClass.EQ, TokenClass.NE, TokenClass.LT,
-                       TokenClass.GT, TokenClass.LE, TokenClass.GE, TokenClass.PLUS, TokenClass.MINUS,
-                       TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
-                parseExp();
-            }
         }
     }
 
@@ -352,6 +280,11 @@ public class Parser {
 
         expect(TokenClass.SC);
     }
+
+    private void parseExp() {
+        parseSecondaryLogicalTerm();
+    }
+
 
     private void parseSecondaryLogicalTerm() {
         parsePrimaryLogicalTerm();
@@ -412,11 +345,10 @@ public class Parser {
             expect(TokenClass.ASTERIX);
             parseSecondaryFactor();
         } else if (accept(TokenClass.LPAR)
-                   && match(lookAhead(1), TokenClass.IDENTIFIER)
-                   && match(lookAhead(2), TokenClass.RPAR) ) {
+                   && matchType(lookAhead(1))) {
             // Type cast
             expect(TokenClass.LPAR);
-            expect(TokenClass.IDENTIFIER);
+            parseType();
             expect(TokenClass.RPAR);
             parseSecondaryFactor();
         } else {
@@ -425,8 +357,10 @@ public class Parser {
     }
 
     private void parsePrimaryFactor() {
-        parseBaseFactor();
-        parsePrimaryFactorOperator();
+        if (!accept(TokenClass.DOT) && !accept(TokenClass.LSBR)) {
+            parseBaseFactor();
+            parsePrimaryFactorOperator();
+        }
     }
 
     private void parsePrimaryFactorOperator() {
@@ -447,6 +381,7 @@ public class Parser {
     private void parseBaseFactor() {
         if (accept(TokenClass.LPAR)) {
             // parse expression inside parenthesis
+            expect(TokenClass.LPAR);
             parseExp();
             expect(TokenClass.RPAR);
         } else if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
@@ -462,14 +397,14 @@ public class Parser {
         } else if (accept(TokenClass.IDENTIFIER)) {
             // parse identifier
             expect(TokenClass.IDENTIFIER);
-            if (accept(TokenClass.LBRA)) {
+            if (accept(TokenClass.LPAR)) {
                 // parse function call
                 // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
-                expect(TokenClass.LBRA);
+                expect(TokenClass.LPAR);
                 if (!accept(TokenClass.RPAR)) {
                     parseFuncallParamLst();
                 }
-                expect(TokenClass.RBRA);
+                expect(TokenClass.RPAR);
             }
         }
     }
