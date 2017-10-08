@@ -253,7 +253,7 @@ public class Parser {
         } else if (accept(TokenClass.RETURN)) {
             parseReturnStat();
             parseStmt();
-        } else if (!accept(TokenClass.RBRA)) { // encounter expression
+        } else if (!accept(TokenClass.RBRA) && getErrorCount() == 0) { // encounter expression
             parseExp();
             if (accept(TokenClass.ASSIGN)) {
                 expect(TokenClass.ASSIGN);
