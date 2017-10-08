@@ -162,9 +162,8 @@ public class Parser {
         if (accept(TokenClass.STRUCT)
             && match(lookAhead(1), TokenClass.IDENTIFIER)
             && match(lookAhead(2), TokenClass.LBRA)) {
-            
-            nextToken();
-            expect(TokenClass.IDENTIFIER);
+
+            parseStructType();
             expect(TokenClass.LBRA);
             parseVarDecls();
             expect(TokenClass.RBRA);
@@ -181,17 +180,19 @@ public class Parser {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
-            
-            if (accept(TokenClass.LSBR)) {
-                // arrays declaration
-                expect(TokenClass.LSBR);
-                expect(TokenClass.INT_LITERAL);
-                expect(TokenClass.RSBR);
-                expect(TokenClass.SC);
-            } else {
-                // normal variables declaration
-                expect(TokenClass.SC);
-            }
+            expect(TokenClass.SC);
+
+            parseVarDecls();
+        } else if (acceptType()
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.LSBR)) {
+
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.LSBR);
+            expect(TokenClass.INT_LITERAL);
+            expect(TokenClass.RSBR);
+            expect(TokenClass.SC);
 
             parseVarDecls();
         }
@@ -250,7 +251,7 @@ public class Parser {
             expect(TokenClass.SC);
         }
     }
-
+ 
     private void parseWhileStat() {
         // while condition
         expect(TokenClass.WHILE);
@@ -401,7 +402,7 @@ public class Parser {
             expect(TokenClass.LPAR);
             parseType();
             expect(TokenClass.RPAR);
-        } else if (accept(TokenClass.IDENTIFIER)) {
+        } else { // accept(TokenClass.IDENTIFIER)
             // parse identifier
             expect(TokenClass.IDENTIFIER);
             if (accept(TokenClass.LPAR)) {
