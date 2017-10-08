@@ -195,6 +195,15 @@ public class Parser {
             expect(TokenClass.SC);
 
             parseVarDecls();
+        } else if (accept(TokenClass.STRUCT)
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.IDENTIFIER)) {
+
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.SC);
+
+            parseVarDecls();
         }
     }
 
@@ -224,11 +233,9 @@ public class Parser {
 
     private void parseBlk() {
         expect(TokenClass.LBRA);
-        parseVarDecls();
 
-        while (!accept(TokenClass.RBRA)) {
-            parseStmt();
-        }
+        parseVarDecls();
+        parseStmt();
 
         expect(TokenClass.RBRA);
     }
@@ -236,19 +243,24 @@ public class Parser {
     private void parseStmt() {
         if (accept(TokenClass.LBRA)) {
             parseBlk();
+            parseStmt();
         } else if (accept(TokenClass.WHILE)) {
             parseWhileStat();
+            parseStmt();
         } else if (accept(TokenClass.IF)) {
             parseIfStat();
+            parseStmt();
         } else if (accept(TokenClass.RETURN)) {
             parseReturnStat();
-        } else { // encounter expression
+            parseStmt();
+        } else if (!accept(TokenClass.RBRA)) { // encounter expression
             parseExp();
             if (accept(TokenClass.ASSIGN)) {
                 expect(TokenClass.ASSIGN);
                 parseExp();
             }
             expect(TokenClass.SC);
+            parseStmt();
         }
     }
  
