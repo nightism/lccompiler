@@ -197,10 +197,24 @@ public class Parser {
             parseVarDecls();
         } else if (accept(TokenClass.STRUCT)
             && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.IDENTIFIER)) {
+            && match(lookAhead(2), TokenClass.IDENTIFIER)
+            && match(lookAhead(3), TokenClass.SC)) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.SC);
+
+            parseVarDecls();
+        } else if (accept(TokenClass.STRUCT)
+            && match(lookAhead(1), TokenClass.IDENTIFIER)
+            && match(lookAhead(2), TokenClass.IDENTIFIER)
+            && match(lookAhead(3), TokenClass.LSBR)) {
+
+            parseType();
+            expect(TokenClass.IDENTIFIER);
+            expect(TokenClass.LSBR);
+            expect(TokenClass.INT_LITERAL);
+            expect(TokenClass.RSBR);
             expect(TokenClass.SC);
 
             parseVarDecls();
