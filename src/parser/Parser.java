@@ -127,7 +127,19 @@ public class Parser {
     }
 
     private boolean acceptType() {
-        return accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
+        return acceptNormalType() || acceptStruct();
+    }
+
+    // private boolean acceptDeclType() {
+        // return accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR) &&
+    // }
+
+    private boolean acceptNormalType() {
+        return accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
+    }
+
+    private boolean acceptStruct() {
+      return accept(TokenClass.STRUCT) && match(lookAhead(1), TokenClass.IDENTIFIER);
     }
 
     private boolean matchType(Token target) {
@@ -174,18 +186,24 @@ public class Parser {
     }
 
     private void parseVarDecls() {
-        if (acceptType()
-            && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.SC)) {
+        if (acceptNormalType()
+            && (match(lookAhead(1), TokenClass.IDENTIFIER)
+              && match(lookAhead(2), TokenClass.SC)
+            || match(lookAhead(1), TokenClass.ASTERIX)
+              && match(lookAhead(2), TokenClass.IDENTIFIER)
+              && match(lookAhead(3), TokenClass.SC))) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
             expect(TokenClass.SC);
 
             parseVarDecls();
-        } else if (acceptType()
-            && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.LSBR)) {
+        } else if (acceptNormalType()
+            && (match(lookAhead(1), TokenClass.IDENTIFIER)
+              && match(lookAhead(2), TokenClass.LSBR)
+            || match(lookAhead(1), TokenClass.ASTERIX)
+              && match(lookAhead(2), TokenClass.IDENTIFIER)
+              && match(lookAhead(3), TokenClass.LSBR))) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
@@ -195,20 +213,24 @@ public class Parser {
             expect(TokenClass.SC);
 
             parseVarDecls();
-        } else if (accept(TokenClass.STRUCT)
-            && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.IDENTIFIER)
-            && match(lookAhead(3), TokenClass.SC)) {
+        } else if (acceptStruct()
+            && (match(lookAhead(2), TokenClass.IDENTIFIER)
+              && match(lookAhead(3), TokenClass.SC)
+            || match(lookAhead(2), TokenClass.ASTERIX)
+              && match(lookAhead(3), TokenClass.IDENTIFIER)
+              && match(lookAhead(4), TokenClass.SC))) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
             expect(TokenClass.SC);
 
             parseVarDecls();
-        } else if (accept(TokenClass.STRUCT)
-            && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.IDENTIFIER)
-            && match(lookAhead(3), TokenClass.LSBR)) {
+        } else if (acceptStruct()
+            && (match(lookAhead(2), TokenClass.IDENTIFIER)
+              && match(lookAhead(3), TokenClass.LSBR)
+            || match(lookAhead(2), TokenClass.ASTERIX)
+              && match(lookAhead(3), TokenClass.IDENTIFIER)
+              && match(lookAhead(4), TokenClass.LSBR))) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
@@ -222,9 +244,7 @@ public class Parser {
     }
 
     private void parseFunDecls() {
-        if (acceptType()
-            && match(lookAhead(1), TokenClass.IDENTIFIER)
-            && match(lookAhead(2), TokenClass.LPAR)) {
+        if (acceptType()) {
 
             parseType();
             expect(TokenClass.IDENTIFIER);
