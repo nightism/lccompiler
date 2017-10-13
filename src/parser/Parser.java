@@ -1,10 +1,15 @@
 package parser;
 
+import ast.FunDecl;
+import ast.Program;
+import ast.StructTypeDecl;
+import ast.VarDecl;
 import lexer.Token;
 import lexer.Tokeniser;
 import lexer.Token.TokenClass;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 
@@ -27,11 +32,11 @@ public class Parser {
         this.tokeniser = tokeniser;
     }
 
-    public void parse() {
+    public Program parse() {
         // get the first token
         nextToken();
 
-        parseProgram();
+        return parseProgram();
     }
 
     public int getErrorCount() {
@@ -146,20 +151,27 @@ public class Parser {
         return match(target, TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
     }
 
-    /**
-    * Starts parsing
-    */
-    private void parseProgram() {
+    /*
+    * Start parsing
+    #*/
+
+    private Program parseProgram() {
         parseIncludes();
         parseStructDecls();
         parseVarDecls();
         parseFunDecls();
+        // List<StructTypeDecl> stds = parseStructDecls();
+        // List<VarDecl> vds = parseVarDecls();
+        // List<FunDecl> fds = parseFunDecls();
+        // expect(TokenClass.EOF);
+        // return new Program(stds, vds, fds);
         expect(TokenClass.EOF);
+        return null;
     }
 
     // includes are ignored, so does not need to return an AST node
     private void parseIncludes() {
-	    if (accept(TokenClass.INCLUDE)) {
+        if (accept(TokenClass.INCLUDE)) {
             nextToken();
             expect(TokenClass.STRING_LITERAL);
             parseIncludes();
@@ -495,4 +507,23 @@ public class Parser {
         expect(TokenClass.STRUCT);
         expect(TokenClass.IDENTIFIER);
     }
+
+    // to be completed and mergered
+
+    // private List<StructTypeDecl> parseStructDecls() {
+    //     // to be completed ...
+    //     return null;
+    // }
+    //
+    // private List<VarDecl> parseVarDecls() {
+    //     // to be completed ...
+    //     return null;
+    // }
+    //
+    // private List<FunDecl> parseFunDecls() {
+    //     // to be completed ...
+    //     return null;
+    // }
+    //
+    // // to be completed ...
 }
