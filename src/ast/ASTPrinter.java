@@ -86,5 +86,8 @@ public class ASTPrinter implements ASTVisitor<Void> {
     }
 
     // to complete ...
-    
+    @Override
+    public Void visitPointerType(PointerType pt) {
+        return null;
+    }
 }

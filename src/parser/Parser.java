@@ -1,9 +1,14 @@
 package parser;
 
+import ast.*;
 import ast.FunDecl;
 import ast.Program;
 import ast.StructTypeDecl;
 import ast.VarDecl;
+
+import ast.BaseType;
+import ast.PointerType;
+
 import lexer.Token;
 import lexer.Tokeniser;
 import lexer.Token.TokenClass;
@@ -490,22 +495,34 @@ public class Parser {
         }
     }
 
-    private void parseType() {
+    private Type parseType() {
+        Type t;
         if(accept(TokenClass.STRUCT)) {
-            parseStructType();
+            Token token = parseStructType();
+            t = new StructType(token.data);
         } else {
-            expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
+            Token token = expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
+            if (token.tokenClass == TokenClass.INT) {
+                t = BaseType.INT;
+            } else if (token.tokenClass == TokenClass.VOID) {
+                t = BaseType.VOID; 
+            } else {
+                t = BaseType.CHAR;
+            }
         }
 
         // if encountering pointer declaration
         if (accept(TokenClass.ASTERIX)) {
             expect(TokenClass.ASTERIX);
+            return new PointerType(t);
         }
+        return t;
     }
 
-    private void parseStructType() {
+    private Token parseStructType() {
         expect(TokenClass.STRUCT);
-        expect(TokenClass.IDENTIFIER);
+        Token iden = expect(TokenClass.IDENTIFIER);
+        return iden;
     }
 
     // to be completed and mergered

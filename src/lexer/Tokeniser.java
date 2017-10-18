@@ -294,7 +294,7 @@ public class Tokeniser {
                 return new Token(TokenClass.INVALID, line, column);
             } else {
                 target = c + target;
-                return new Token(TokenClass.INT_LITERAL, line, column);
+                return new Token(TokenClass.INT_LITERAL, target, line, column);
             }
         }
 
