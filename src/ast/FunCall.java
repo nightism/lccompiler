@@ -2,7 +2,7 @@ package ast;
 
 import java.util.List;
 
-public class FunCall implements ASTNode {
+public class FunCall extends Expr {
     public final String name;
     public final List<Expr> params;
 

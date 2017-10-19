@@ -5,7 +5,7 @@ package ast;
  */
 public class PointerType implements Type {
 
-    Type type;
+   public final Type type;
 
     public PointerType (Type t) {
         this.type = t;

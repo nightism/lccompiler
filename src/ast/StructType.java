@@ -5,7 +5,7 @@ package ast;
  */
 public class StructType implements Type {
 
-    String name;
+    public final String name;
 
     public StructType (String n) {
         this.name = n;
