@@ -453,34 +453,49 @@ public class Parser {
         if (accept(TokenClass.LPAR)) {
             // parse expression inside parenthesis
             expect(TokenClass.LPAR);
-            parseExp();
+            Expr exp = parseExp();
             expect(TokenClass.RPAR);
+            return exp;
         } else if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
             // parse literal factors
-            expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
+            Token t = expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
+            if (t.tokenClass == TokenClass.INT_LITERAL) {
+                return new IntLiteral(t.data);
+            } else if (t.tokenClass == TokenClass.CHAR_LITERAL) {
+                return new CharLiteral(t.data);
+            } else { // t.tokenClass == TokenClass.STRING_LITERAL;
+                return new StrLiteral(t.data);
+            }
         } else if (accept(TokenClass.SIZEOF)) {
             // parse sizeof(type)
             // sizeof ::= "sizeof" "(" type ")"
             expect(TokenClass.SIZEOF);
+
             expect(TokenClass.LPAR);
-            parseType();
+            Expr result = new SizeOfExpr(parseType());
             expect(TokenClass.RPAR);
+
+            return result;
         } else { // accept(TokenClass.IDENTIFIER)
             // parse identifier
             Token token = expect(TokenClass.IDENTIFIER);
-            Expr exp = new VarExpr(token.data);
 
             if (accept(TokenClass.LPAR)) {
                 // parse function call
                 // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
+                List<Expr> funcallParam = new ArrayList<Expr>();
                 expect(TokenClass.LPAR);
+
                 if (!accept(TokenClass.RPAR)) {
-                    parseFuncallParamLst();
+                    funcallParam = parseFuncallParamLst();
                 }
                 expect(TokenClass.RPAR);
+
+                return new FunCall(token.data, funcallParam);
+            } else {
+                return new VarExpr(token.data);
             }
         }
-        return null;
     }
 
     private List<Expr> parseFuncallParamLst() {
@@ -522,7 +537,7 @@ public class Parser {
                 t = BaseType.INT;
             } else if (token.tokenClass == TokenClass.VOID) {
                 t = BaseType.VOID; 
-            } else {
+            } else { // token.tokenClass == TokenClass.CHAR
                 t = BaseType.CHAR;
             }
         }
