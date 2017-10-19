@@ -13,6 +13,7 @@ import lexer.Token;
 import lexer.Tokeniser;
 import lexer.Token.TokenClass;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -486,13 +487,20 @@ public class Parser {
         }
     }
 
-    private void parseParamLst() {
-        parseType();
-        expect(TokenClass.IDENTIFIER);
+    private List<VarDecl> parseParamLst() {
+        List<VarDecl> results = new ArrayList<VarDecl>();
+
+        Type t = parseType();
+        Token iden = expect(TokenClass.IDENTIFIER);
+        results.add(new VarDecl(t, iden.data));
+
         if (accept(TokenClass.COMMA)) {
             expect(TokenClass.COMMA);
-            parseParamLst();
+            List<VarDecl> rest = parseParamLst();
+            results.addAll(rest);
         }
+
+        return results;
     }
 
     private Type parseType() {
