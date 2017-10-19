@@ -351,8 +351,9 @@ public class Parser {
         expect(TokenClass.SC);
     }
 
-    private void parseExp() {
+    private Expr parseExp() {
         parseSecondaryLogicalTerm();
+        return null;
     }
 
 
@@ -448,7 +449,7 @@ public class Parser {
         }
     }
 
-    private void parseBaseFactor() {
+    private Expr parseBaseFactor() {
         if (accept(TokenClass.LPAR)) {
             // parse expression inside parenthesis
             expect(TokenClass.LPAR);
@@ -466,7 +467,9 @@ public class Parser {
             expect(TokenClass.RPAR);
         } else { // accept(TokenClass.IDENTIFIER)
             // parse identifier
-            expect(TokenClass.IDENTIFIER);
+            Token token = expect(TokenClass.IDENTIFIER);
+            Expr exp = new VarExpr(token.data);
+
             if (accept(TokenClass.LPAR)) {
                 // parse function call
                 // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
@@ -477,14 +480,19 @@ public class Parser {
                 expect(TokenClass.RPAR);
             }
         }
+        return null;
     }
 
-    private void parseFuncallParamLst() {
-        parseExp();
+    private List<Expr> parseFuncallParamLst() {
+        List<Expr> results = new ArrayList<Expr>();
+        results.add(parseExp());
+
         if (accept(TokenClass.COMMA)) {
             expect(TokenClass.COMMA);
-            parseFuncallParamLst();
+            List<Expr> rest = parseFuncallParamLst();
+            results.addAll(rest);
         }
+        return results;
     }
 
     private List<VarDecl> parseParamLst() {
