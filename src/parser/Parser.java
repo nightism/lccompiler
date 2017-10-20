@@ -293,24 +293,32 @@ public class Parser {
     }
 
     private Stmt parseStmt() {
-
         if (accept(TokenClass.LBRA)) {
             parseBlk();
         } else if (accept(TokenClass.WHILE)) {
-            parseWhileStat();
+            return parseWhileStat();
         } else if (accept(TokenClass.IF)) {
-            parseIfStat();
+            return parseIfStat();
         } else if (accept(TokenClass.RETURN)) {
-            parseReturnStat();
+            return parseReturnStat();
         } else { // encounter expression
-            parseExp();
-            if (accept(TokenClass.ASSIGN)) {
+            Stmt resultStmt = null;
+            Expr assignee = parseExp();
+            if (assignee == null) {
+                resultStmt = null;
+            } else if (accept(TokenClass.ASSIGN)) {
                 expect(TokenClass.ASSIGN);
-                parseExp();
+                Expr assigner = parseExp();
+                if (assigner != null) {
+                    resultStmt = new Assign(assignee, assigner);
+                } else {
+                    resultStmt = null;
+                }
             }
             expect(TokenClass.SC);
+            return resultStmt;
         }
-
+        // should never reach here
         return null;
     }
 
