@@ -370,11 +370,25 @@ public class Parser {
         }
     }
 
-    private void parseSecondaryRelationalTerm() {
-        parsePrimaryRelationalTerm();
+    private Expr parseSecondaryRelationalTerm() {
+        return parseSecondaryRelationalTerm(parsePrimaryRelationalTerm());
+    }
+
+    private Expr parseSecondaryRelationalTerm(Expr operandOne) {
         if (accept(TokenClass.EQ, TokenClass.NE)) {
-            expect(TokenClass.EQ, TokenClass.NE);
-            parseSecondaryRelationalTerm();
+            Token op = expect(TokenClass.EQ, TokenClass.NE);
+            Expr operandTwo = parsePrimaryRelationalTerm();
+            if (operandTwo != null) {
+                if (op.tokenClass == TokenClass.EQ) {
+                    return parseSecondaryRelationalTerm(new BinOp(operandOne, Op.EQ, operandTwo));
+                } else { // op.tokenClass == TokenClass.NE
+                    return parseSecondaryRelationalTerm(new BinOp(operandOne, Op.NE, operandTwo));
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
