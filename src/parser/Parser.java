@@ -301,21 +301,25 @@ public class Parser {
     /********* PARSE INSIDE STRUCTURE *********/
     /******************************************/
 
-    private void parseBlk() {
+    private Block parseBlk() {
         expect(TokenClass.LBRA);
 
-        parseVarDecls();
+        List<VarDecl> varDecls = parseVarDecls();
+        List<Stmt> stmts = new ArrayList<Stmt>();
 
         while (!accept(TokenClass.RBRA) && getErrorCount() == 0) {
-            parseStmt();
+            Stmt thisOne = parseStmt();
+            if (thisOne != null) {
+                stmts.add(thisOne);
+            }
         }
-
         expect(TokenClass.RBRA);
+        return new Block(varDecls, stmts);
     }
 
     private Stmt parseStmt() {
         if (accept(TokenClass.LBRA)) {
-            parseBlk();
+            return parseBlk();
         } else if (accept(TokenClass.WHILE)) {
             return parseWhileStat();
         } else if (accept(TokenClass.IF)) {
@@ -340,7 +344,7 @@ public class Parser {
             return resultStmt;
         }
         // should never reach here
-        return null;
+        // return null;
     }
 
     private While parseWhileStat() {
