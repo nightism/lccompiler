@@ -459,12 +459,18 @@ public class Parser {
         } else if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
             // parse literal factors
             Token t = expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
-            if (t.tokenClass == TokenClass.INT_LITERAL) {
+
+            if (t == null) {
+                return null;
+            } else if (t.tokenClass == TokenClass.INT_LITERAL) {
                 return new IntLiteral(t.data);
             } else if (t.tokenClass == TokenClass.CHAR_LITERAL) {
                 return new CharLiteral(t.data);
-            } else { // t.tokenClass == TokenClass.STRING_LITERAL;
+            } else if (t.tokenClass == TokenClass.STRING_LITERAL) {
                 return new StrLiteral(t.data);
+            } else {
+                // should never reach this point
+                return null;
             }
         } else if (accept(TokenClass.SIZEOF)) {
             // parse sizeof(type)
@@ -472,7 +478,11 @@ public class Parser {
             expect(TokenClass.SIZEOF);
 
             expect(TokenClass.LPAR);
-            Expr result = new SizeOfExpr(parseType());
+            Type t = parseType();
+            Expr result = null;
+            if (t != null) {
+                result = new SizeOfExpr(t);
+            }
             expect(TokenClass.RPAR);
 
             return result;
@@ -480,7 +490,7 @@ public class Parser {
             // parse identifier
             Token token = expect(TokenClass.IDENTIFIER);
 
-            if (accept(TokenClass.LPAR)) {
+            if (accept(TokenClass.LPAR) && (token != null)) {
                 // parse function call
                 // funcall ::= IDENT "(" [ exp ("," exp)* ] ")"
                 List<Expr> funcallParam = new ArrayList<Expr>();
@@ -492,15 +502,20 @@ public class Parser {
                 expect(TokenClass.RPAR);
 
                 return new FunCall(token.data, funcallParam);
-            } else {
+            } else if (token != null) {
                 return new VarExpr(token.data);
+            } else {
+                return null;
             }
         }
     }
 
     private List<Expr> parseFuncallParamLst() {
         List<Expr> results = new ArrayList<Expr>();
-        results.add(parseExp());
+        Expr exp = parseExp();
+        if (exp != null) {
+            results.add(exp);
+        }
 
         if (accept(TokenClass.COMMA)) {
             expect(TokenClass.COMMA);
@@ -515,7 +530,9 @@ public class Parser {
 
         Type t = parseType();
         Token iden = expect(TokenClass.IDENTIFIER);
-        results.add(new VarDecl(t, iden.data));
+        if (iden != null) {
+            results.add(new VarDecl(t, iden.data));
+        }
 
         if (accept(TokenClass.COMMA)) {
             expect(TokenClass.COMMA);
@@ -527,23 +544,25 @@ public class Parser {
     }
 
     private Type parseType() {
-        Type t;
+        Type t = null;
         if(accept(TokenClass.STRUCT)) {
             Token token = parseStructType();
-            t = new StructType(token.data);
+            if (token != null) {
+                t = new StructType(token.data);
+            }
         } else {
             Token token = expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
             if (token.tokenClass == TokenClass.INT) {
                 t = BaseType.INT;
             } else if (token.tokenClass == TokenClass.VOID) {
                 t = BaseType.VOID; 
-            } else { // token.tokenClass == TokenClass.CHAR
+            } else if (token.tokenClass == TokenClass.CHAR) {
                 t = BaseType.CHAR;
             }
         }
 
         // if encountering pointer declaration
-        if (accept(TokenClass.ASTERIX)) {
+        if (accept(TokenClass.ASTERIX) && (t != null)) {
             expect(TokenClass.ASTERIX);
             return new PointerType(t);
         }
