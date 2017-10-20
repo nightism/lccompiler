@@ -341,7 +341,7 @@ public class Parser {
 
     private Return parseReturnStat() {
         expect(TokenClass.RETURN);
-        Return stmt;
+        Return stmt = null;
 
         // return expression
         if (!accept(TokenClass.SC)) {
@@ -364,7 +364,7 @@ public class Parser {
     }
 
     private Expr parseSecondaryLogicalTerm(Expr operandOne) {
-        if (accept(TokenClass.OR)) {
+        if (accept(TokenClass.OR) && operandOne != null) {
             expect(TokenClass.OR);
             Expr operandTwo = parsePrimaryLogicalTerm();
             if (operandTwo != null) {
@@ -382,7 +382,7 @@ public class Parser {
     }
 
     private Expr parsePrimaryLogicalTerm(Expr operandOne) {
-        if (accept(TokenClass.AND)) {
+        if (accept(TokenClass.AND) && operandOne != null) {
             expect(TokenClass.AND);
             Expr operandTwo = parseSecondaryRelationalTerm();
             if (operandTwo != null) {
@@ -400,10 +400,10 @@ public class Parser {
     }
 
     private Expr parseSecondaryRelationalTerm(Expr operandOne) {
-        if (accept(TokenClass.EQ, TokenClass.NE)) {
+        if (accept(TokenClass.EQ, TokenClass.NE) && operandOne != null) {
             Token op = expect(TokenClass.EQ, TokenClass.NE);
             Expr operandTwo = parsePrimaryRelationalTerm();
-            if (operandTwo != null) {
+            if (operandTwo != null && op != null) {
                 if (op.tokenClass == TokenClass.EQ) {
                     return parseSecondaryRelationalTerm(new BinOp(operandOne, Op.EQ, operandTwo));
                 } else { // op.tokenClass == TokenClass.NE
@@ -422,7 +422,7 @@ public class Parser {
     }
 
     private Expr parsePrimaryRelationalTerm(Expr operandOne) {
-        if (accept(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE)) {
+        if (accept(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE) && operandOne != null) {
             Token op = expect(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE);
             Expr operandTwo = parseSecondaryArithmeticTerm();
 
@@ -449,7 +449,7 @@ public class Parser {
     }
 
     private Expr parseSecondaryArithmeticTerm(Expr operandOne) {
-        if (accept(TokenClass.PLUS, TokenClass.MINUS)) {
+        if (accept(TokenClass.PLUS, TokenClass.MINUS) && operandOne != null) {
             Token op = expect(TokenClass.PLUS, TokenClass.MINUS);
             Expr operandTwo = parsePrimaryArithmeticTerm();
 
@@ -472,7 +472,7 @@ public class Parser {
     }
 
     private Expr parsePrimaryArithmeticTerm(Expr operandOne) {
-        if (accept(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM)) {
+        if (accept(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM) && operandOne != null) {
             Token op = expect(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
             Expr operandTwo = parseSecondaryFactor();
 
@@ -664,12 +664,14 @@ public class Parser {
             }
         } else {
             Token token = expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
-            if (token.tokenClass == TokenClass.INT) {
-                t = BaseType.INT;
-            } else if (token.tokenClass == TokenClass.VOID) {
-                t = BaseType.VOID;
-            } else if (token.tokenClass == TokenClass.CHAR) {
-                t = BaseType.CHAR;
+            if (token != null) {
+                if (token.tokenClass == TokenClass.INT) {
+                    t = BaseType.INT;
+                } else if (token.tokenClass == TokenClass.VOID) {
+                    t = BaseType.VOID;
+                } else if (token.tokenClass == TokenClass.CHAR) {
+                    t = BaseType.CHAR;
+                }
             }
         }
 
