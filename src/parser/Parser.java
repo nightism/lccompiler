@@ -160,16 +160,16 @@ public class Parser {
 
     private Program parseProgram() {
         parseIncludes();
-        parseStructDecls();
-        parseVarDecls();
-        parseFunDecls();
-        // List<StructTypeDecl> stds = parseStructDecls();
-        // List<VarDecl> vds = parseVarDecls();
-        // List<FunDecl> fds = parseFunDecls();
-        // expect(TokenClass.EOF);
-        // return new Program(stds, vds, fds);
+        // parseStructDecls();
+        // parseVarDecls();
+        // parseFunDecls();
+        List<StructTypeDecl> stds = parseStructDecls();
+        List<VarDecl> vds = parseVarDecls();
+        List<FunDecl> fds = parseFunDecls();
         expect(TokenClass.EOF);
-        return null;
+        return new Program(stds, vds, fds);
+        // expect(TokenClass.EOF);
+        // return null;
     }
 
     // includes are ignored, so does not need to return an AST node
