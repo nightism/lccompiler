@@ -426,7 +426,7 @@ public class Parser {
             Token op = expect(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE);
             Expr operandTwo = parseSecondaryArithmeticTerm();
 
-            if (operandTwo != null) {
+            if (operandTwo != null && op != null) {
                 if (op.tokenClass == TokenClass.LT) {
                     return parsePrimaryRelationalTerm(new BinOp(operandOne, Op.LT, operandTwo));
                 } else if (op.tokenClass == TokenClass.GT) {
@@ -453,7 +453,7 @@ public class Parser {
             Token op = expect(TokenClass.PLUS, TokenClass.MINUS);
             Expr operandTwo = parsePrimaryArithmeticTerm();
 
-            if (operandTwo != null) {
+            if (operandTwo != null && op != null) {
                 if (op.tokenClass == TokenClass.PLUS) {
                     return parseSecondaryArithmeticTerm(new BinOp(operandOne, Op.ADD, operandTwo));
                 } else { // op.tokenClass == TokenClass.MINUS
@@ -476,7 +476,7 @@ public class Parser {
             Token op = expect(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
             Expr operandTwo = parseSecondaryFactor();
 
-            if (operandTwo != null) {
+            if (operandTwo != null && op != null) {
                 if (op.tokenClass == TokenClass.ASTERIX) {
                     return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.MUL, operandTwo));
                 } else if (op.tokenClass == TokenClass.DIV) {
@@ -516,7 +516,7 @@ public class Parser {
             Type t = parseType();
             expect(TokenClass.RPAR);
             Expr exp = parseSecondaryFactor();
-            if (exp != null) {
+            if (exp != null && t != null) {
                 return new TypecastExpr(t, exp);
             }
         } else {
@@ -567,7 +567,7 @@ public class Parser {
             expect(TokenClass.LPAR);
             Expr exp = parseExp();
             expect(TokenClass.RPAR);
-            return exp;
+            return exp; // could be null
         } else if (accept(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL)) {
             // parse literal factors
             Token t = expect(TokenClass.INT_LITERAL, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL);
@@ -642,7 +642,7 @@ public class Parser {
 
         Type t = parseType();
         Token iden = expect(TokenClass.IDENTIFIER);
-        if (iden != null) {
+        if (iden != null && t != null) {
             results.add(new VarDecl(t, iden.data));
         }
 
@@ -652,7 +652,7 @@ public class Parser {
             results.addAll(rest);
         }
 
-        return results;
+        return results; // could be empty list
     }
 
     private Type parseType() {
@@ -667,7 +667,7 @@ public class Parser {
             if (token.tokenClass == TokenClass.INT) {
                 t = BaseType.INT;
             } else if (token.tokenClass == TokenClass.VOID) {
-                t = BaseType.VOID; 
+                t = BaseType.VOID;
             } else if (token.tokenClass == TokenClass.CHAR) {
                 t = BaseType.CHAR;
             }
@@ -678,13 +678,13 @@ public class Parser {
             expect(TokenClass.ASTERIX);
             return new PointerType(t);
         }
-        return t;
+        return t; // could be none
     }
 
     private Token parseStructType() {
         expect(TokenClass.STRUCT);
         Token iden = expect(TokenClass.IDENTIFIER);
-        return iden;
+        return iden; // could be none
     }
 
     // to be completed and mergered
