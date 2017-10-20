@@ -427,25 +427,38 @@ public class Parser {
         }
     }
 
-    private void parsePrimaryFactor() {
+    private Expr parsePrimaryFactor() {
         if (!accept(TokenClass.DOT) && !accept(TokenClass.LSBR)) {
-            parseBaseFactor();
-            parsePrimaryFactorOperator();
+            Expr base = parseBaseFactor();
+            if (base != null) {
+                return parsePrimaryFactorOperator(base);
+            }
         }
+        return null;
     }
 
-    private void parsePrimaryFactorOperator() {
+    private Expr parsePrimaryFactorOperator(Expr base) {
         if (accept(TokenClass.DOT)) {
             // parse fieldaccess
             expect(TokenClass.DOT);
-            expect(TokenClass.IDENTIFIER);
-            parsePrimaryFactorOperator();
+            Token iden = expect(TokenClass.IDENTIFIER);
+            if (iden != null) {
+                return parsePrimaryFactorOperator(new FieldAccessExpr(base, iden.data));
+            } else {
+                return null;
+            }
         } else if (accept(TokenClass.LSBR)) {
             // parse arrayaccess
             expect(TokenClass.LSBR);
-            parseExp();
+            Expr index = parseExp();
             expect(TokenClass.RSBR);
-            parsePrimaryFactorOperator();
+            if (index != null) {
+                return parsePrimaryFactorOperator(new ArrayAccessExpr(base, index));
+            } else {
+                return null;
+            }
+        } else {
+            return base;
         }
     }
 
