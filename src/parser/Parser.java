@@ -325,8 +325,10 @@ public class Parser {
         // if condition
         expect(TokenClass.IF);
         expect(TokenClass.LPAR);
-        parseExp();
+        Expr cond = parseExp();
         expect(TokenClass.RPAR);
+
+
         // statement
         parseStmt();
 
@@ -337,15 +339,20 @@ public class Parser {
         }
     }
 
-    private void parseReturnStat() {
+    private Return parseReturnStat() {
         expect(TokenClass.RETURN);
+        Return stmt;
 
         // return expression
         if (!accept(TokenClass.SC)) {
-            parseExp();
+            Expr exp = parseExp();
+            stmt = new Return(exp);
+        } else {
+            stmt = new Return();
         }
-
         expect(TokenClass.SC);
+
+        return stmt;
     }
 
     private Expr parseExp() {
