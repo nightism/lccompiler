@@ -349,24 +349,42 @@ public class Parser {
     }
 
     private Expr parseExp() {
-        parseSecondaryLogicalTerm();
-        return null;
+        return parseSecondaryLogicalTerm();
     }
 
+    private Expr parseSecondaryLogicalTerm() {
+        return parseSecondaryLogicalTerm(parsePrimaryLogicalTerm());
+    }
 
-    private void parseSecondaryLogicalTerm() {
-        parsePrimaryLogicalTerm();
+    private Expr parseSecondaryLogicalTerm(Expr operandOne) {
         if (accept(TokenClass.OR)) {
             expect(TokenClass.OR);
-            parseSecondaryLogicalTerm();
+            Expr operandTwo = parsePrimaryLogicalTerm();
+            if (operandTwo != null) {
+                return parseSecondaryLogicalTerm(new BinOp(operandOne, Op.OR, operandTwo));
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
-    private void parsePrimaryLogicalTerm() {
-        parseSecondaryRelationalTerm();
+    private Expr parsePrimaryLogicalTerm() {
+        return parsePrimaryLogicalTerm(parseSecondaryRelationalTerm());
+    }
+
+    private Expr parsePrimaryLogicalTerm(Expr operandOne) {
         if (accept(TokenClass.AND)) {
             expect(TokenClass.AND);
-            parsePrimaryLogicalTerm();
+            Expr operandTwo = parseSecondaryRelationalTerm();
+            if (operandTwo != null) {
+                return parsePrimaryLogicalTerm(new BinOp(operandOne, Op.AND, operandTwo));
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
