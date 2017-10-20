@@ -293,6 +293,7 @@ public class Parser {
     }
 
     private Stmt parseStmt() {
+
         if (accept(TokenClass.LBRA)) {
             parseBlk();
         } else if (accept(TokenClass.WHILE)) {
@@ -313,14 +314,20 @@ public class Parser {
         return null;
     }
 
-    private void parseWhileStat() {
+    private While parseWhileStat() {
         // while condition
         expect(TokenClass.WHILE);
         expect(TokenClass.LPAR);
-        parseExp();
+        Expr cond = parseExp();
         expect(TokenClass.RPAR);
         // statement
-        parseStmt();
+        Stmt stmt = parseStmt();
+
+        if (cond != null && stmt != null) {
+            return new While(cond, stmt);
+        } else {
+            return null;
+        }
     }
 
     private If parseIfStat() {
