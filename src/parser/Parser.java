@@ -279,24 +279,24 @@ public class Parser {
         return results;
     }
 
-    private List<FuncDecl> parseFunDecls() {
-        List<FuncDecl> results = new ArrayList<FuncDecl>();
+    private List<FunDecl> parseFunDecls() {
+        List<FunDecl> results = new ArrayList<FunDecl>();
         if (acceptType()) {
 
             Type type = parseType();
             Token iden = expect(TokenClass.IDENTIFIER);
             expect(TokenClass.LPAR);
 
-            List<VarDecl> varDecls;
+            List<VarDecl> varDecls = new ArrayList<VarDecl>();
             if (!accept(TokenClass.RPAR)) {
-                varDecls = parseParamLst();
+                varDecls.addAll(parseParamLst());
             }
 
             expect(TokenClass.RPAR);
             Block blk= parseBlk();
 
             if (type != null && iden != null && blk != null) {
-                results.add(new FuncDecl(type, iden.data, varDecls, blk));
+                results.add(new FunDecl(type, iden.data, varDecls, blk));
             }
 
             results.addAll(parseFunDecls());
