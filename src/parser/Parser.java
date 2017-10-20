@@ -378,11 +378,30 @@ public class Parser {
         }
     }
 
-    private void parsePrimaryRelationalTerm() {
-        parseSecondaryArithmeticTerm();
+    private Expr parsePrimaryRelationalTerm() {
+        return parsePrimaryRelationalTerm(parseSecondaryArithmeticTerm());
+    }
+
+    private Expr parsePrimaryRelationalTerm(Expr operandOne) {
         if (accept(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE)) {
-            expect(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE);
-            parsePrimaryRelationalTerm();
+            Token op = expect(TokenClass.LT, TokenClass.GT, TokenClass.LE, TokenClass.GE);
+            Expr operandTwo = parseSecondaryArithmeticTerm();
+
+            if (operandTwo != null) {
+                if (op.tokenClass == TokenClass.LT) {
+                    return parsePrimaryRelationalTerm(new BinOp(operandOne, Op.LT, operandTwo));
+                } else if (op.tokenClass == TokenClass.GT) {
+                    return parsePrimaryRelationalTerm(new BinOp(operandOne, Op.GT, operandTwo));
+                } else if (op.tokenClass == TokenClass.LE) {
+                    return parsePrimaryRelationalTerm(new BinOp(operandOne, Op.LE, operandTwo));
+                } else { // op.tokenClass == TokenClass.GE
+                    return parsePrimaryRelationalTerm(new BinOp(operandOne, Op.GE, operandTwo));
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
@@ -397,9 +416,9 @@ public class Parser {
 
             if (operandTwo != null) {
                 if (op.tokenClass == TokenClass.PLUS) {
-                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.ADD, operandTwo));
+                    return parseSecondaryArithmeticTerm(new BinOp(operandOne, Op.ADD, operandTwo));
                 } else { // op.tokenClass == TokenClass.MINUS
-                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.SUB, operandTwo));
+                    return parseSecondaryArithmeticTerm(new BinOp(operandOne, Op.SUB, operandTwo));
                 }
             } else {
                 return null;
