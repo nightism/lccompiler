@@ -185,19 +185,29 @@ public class Parser {
     /********** PARSE BASIC PROGRAM STRUCTURE **********/
     /***************************************************/
 
-    private void parseStructDecls() {
+    private List<StructTypeDecl> parseStructDecls() {
+        List<StructTypeDecl> results = new ArrayList<StructTypeDecl>();
+
         if (accept(TokenClass.STRUCT)
             && match(lookAhead(1), TokenClass.IDENTIFIER)
             && match(lookAhead(2), TokenClass.LBRA)) {
 
-            parseStructType();
+            StructType type = parseStructType();
+
             expect(TokenClass.LBRA);
-            parseVarDecls();
+            List<VarDecl> varDecls = new ArrayList<VarDecl>();
+            varDecls.addAll(parseVarDecls());
             expect(TokenClass.RBRA);
+
             expect(TokenClass.SC);
 
-            parseStructDecls();
+            if (type != null) {
+                results.add(new StructTypeDecl(type, varDecls));
+            }
+
+            results.addAll(parseStructDecls());
         }
+        return results;
     }
 
     private List<VarDecl> parseVarDecls() {
@@ -713,10 +723,7 @@ public class Parser {
     private Type parseType() {
         Type t = null;
         if(accept(TokenClass.STRUCT)) {
-            Token token = parseStructType();
-            if (token != null) {
-                t = new StructType(token.data);
-            }
+            t = parseStructType();
         } else {
             Token token = expect(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR);
             if (token != null) {
@@ -738,28 +745,19 @@ public class Parser {
         return t; // could be none
     }
 
-    private Token parseStructType() {
+    private StructType parseStructType() {
         expect(TokenClass.STRUCT);
         Token iden = expect(TokenClass.IDENTIFIER);
-        return iden; // could be none
+        if (iden != null) {
+            return new StructType(iden.data);
+        } else {
+            return null;
+        }
     }
-
-    // to be completed and mergered
 
     // private List<StructTypeDecl> parseStructDecls() {
     //     // to be completed ...
     //     return null;
     // }
-    //
-    // private List<VarDecl> parseVarDecls() {
-    //     // to be completed ...
-    //     return null;
-    // }
-    //
-    // private List<FunDecl> parseFunDecls() {
-    //     // to be completed ...
-    //     return null;
-    // }
-    //
-    // // to be completed ...
+
 }

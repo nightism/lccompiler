@@ -1,5 +1,8 @@
 package ast;
 
+/**
+ * @author myiking
+ */
 public class VarDecl implements ASTNode {
     public final Type type;
     public final String varName;
