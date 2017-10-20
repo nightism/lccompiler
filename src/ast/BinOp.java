@@ -10,7 +10,7 @@ public class BinOp extends Expr {
     public final Expr operandTwo;
     public final Op operator;
 
-    public BinOp(Expr operandOne, Expr operandTwo, Op operator) {
+    public BinOp(Expr operandOne, Op operator, Expr operandTwo) {
         this.operandOne = operandOne;
         this.operandTwo = operandTwo;
         this.operator = operator;

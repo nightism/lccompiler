@@ -1,10 +1,7 @@
 package parser;
 
 import ast.*;
-import ast.FunDecl;
-import ast.Program;
-import ast.StructTypeDecl;
-import ast.VarDecl;
+import ast.BinOp.Op;
 
 import ast.BaseType;
 import ast.PointerType;
@@ -389,42 +386,86 @@ public class Parser {
         }
     }
 
-    private void parseSecondaryArithmeticTerm() {
-        parsePrimaryArithmeticTerm();
+    private Expr parseSecondaryArithmeticTerm() {
+        return parseSecondaryArithmeticTerm(parsePrimaryArithmeticTerm());
+    }
+
+    private Expr parseSecondaryArithmeticTerm(Expr operandOne) {
         if (accept(TokenClass.PLUS, TokenClass.MINUS)) {
-            expect(TokenClass.PLUS, TokenClass.MINUS);
-            parseSecondaryArithmeticTerm();
+            Token op = expect(TokenClass.PLUS, TokenClass.MINUS);
+            Expr operandTwo = parsePrimaryArithmeticTerm();
+
+            if (operandTwo != null) {
+                if (op.tokenClass == TokenClass.PLUS) {
+                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.ADD, operandTwo));
+                } else { // op.tokenClass == TokenClass.MINUS
+                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.SUB, operandTwo));
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
+    private Expr parsePrimaryArithmeticTerm() {
+        return parsePrimaryArithmeticTerm(parseSecondaryFactor());
+    }
 
-    private void parsePrimaryArithmeticTerm() {
-        parseSecondaryFactor();
+    private Expr parsePrimaryArithmeticTerm(Expr operandOne) {
         if (accept(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM)) {
-            expect(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
-            parsePrimaryArithmeticTerm();
+            Token op = expect(TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM);
+            Expr operandTwo = parseSecondaryFactor();
+
+            if (operandTwo != null) {
+                if (op.tokenClass == TokenClass.ASTERIX) {
+                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.MUL, operandTwo));
+                } else if (op.tokenClass == TokenClass.DIV) {
+                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.DIV, operandTwo));
+                } else { // op.tokenClass == TokenClass.REM
+                    return parsePrimaryArithmeticTerm(new BinOp(operandOne, Op.MOD, operandTwo));
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return operandOne;
         }
     }
 
-    private void parseSecondaryFactor() {
+    private Expr parseSecondaryFactor() {
         if (accept(TokenClass.MINUS)) {
             // Unary Minus
-            expect(TokenClass.MINUS);
-            parseSecondaryFactor();
+            if (expect(TokenClass.MINUS) != null) {
+                Expr exp = parseSecondaryFactor();
+                if (exp != null) {
+                    return new BinOp(new IntLiteral(0), Op.SUB, exp);
+                }
+            }
         } else if (accept(TokenClass.ASTERIX)) {
             // Pointer indirection
-            expect(TokenClass.ASTERIX);
-            parseSecondaryFactor();
+            if (expect(TokenClass.ASTERIX) != null) {
+                Expr exp = parseSecondaryFactor();
+                if (exp != null) {
+                    return new ValueAtExpr(exp);
+                }
+            }
         } else if (accept(TokenClass.LPAR)
                    && matchType(lookAhead(1))) {
             // Type cast
             expect(TokenClass.LPAR);
-            parseType();
+            Type t = parseType();
             expect(TokenClass.RPAR);
-            parseSecondaryFactor();
+            Expr exp = parseSecondaryFactor();
+            if (exp != null) {
+                return new TypecastExpr(t, exp);
+            }
         } else {
-            parsePrimaryFactor();
+            return parsePrimaryFactor();
         }
+
+        return null;
     }
 
     private Expr parsePrimaryFactor() {
