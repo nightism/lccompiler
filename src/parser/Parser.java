@@ -200,62 +200,83 @@ public class Parser {
         }
     }
 
-    private void parseVarDecls() {
+    private List<VarDecl> parseVarDecls() {
+        List<VarDecl> results = new ArrayList<VarDecl>();
+        List<VarDecl> rests = new ArrayList<VarDecl>();
+
+        Type type = null;
+        Token iden = null;
+        Token n = null;
+        boolean arrayFlag = false;
         if (acceptNormalType()
             && (match(lookAhead(1), TokenClass.IDENTIFIER)
               && match(lookAhead(2), TokenClass.SC)
             || match(lookAhead(1), TokenClass.ASTERIX)
               && match(lookAhead(2), TokenClass.IDENTIFIER)
               && match(lookAhead(3), TokenClass.SC))) {
-
-            parseType();
-            expect(TokenClass.IDENTIFIER);
+            // normal var declaration
+            type = parseType();
+            iden = expect(TokenClass.IDENTIFIER);
             expect(TokenClass.SC);
 
-            parseVarDecls();
         } else if (acceptNormalType()
             && (match(lookAhead(1), TokenClass.IDENTIFIER)
               && match(lookAhead(2), TokenClass.LSBR)
             || match(lookAhead(1), TokenClass.ASTERIX)
               && match(lookAhead(2), TokenClass.IDENTIFIER)
               && match(lookAhead(3), TokenClass.LSBR))) {
-
-            parseType();
-            expect(TokenClass.IDENTIFIER);
+            // normal var array declaration
+            type = parseType();
+            iden = expect(TokenClass.IDENTIFIER);
             expect(TokenClass.LSBR);
-            expect(TokenClass.INT_LITERAL);
+            n = expect(TokenClass.INT_LITERAL);
             expect(TokenClass.RSBR);
             expect(TokenClass.SC);
+            arrayFlag = true;
 
-            parseVarDecls();
         } else if (acceptStruct()
             && (match(lookAhead(2), TokenClass.IDENTIFIER)
               && match(lookAhead(3), TokenClass.SC)
             || match(lookAhead(2), TokenClass.ASTERIX)
               && match(lookAhead(3), TokenClass.IDENTIFIER)
               && match(lookAhead(4), TokenClass.SC))) {
-
-            parseType();
-            expect(TokenClass.IDENTIFIER);
+            // struct var declaration
+            type = parseType();
+            iden = expect(TokenClass.IDENTIFIER);
             expect(TokenClass.SC);
 
-            parseVarDecls();
         } else if (acceptStruct()
             && (match(lookAhead(2), TokenClass.IDENTIFIER)
               && match(lookAhead(3), TokenClass.LSBR)
             || match(lookAhead(2), TokenClass.ASTERIX)
               && match(lookAhead(3), TokenClass.IDENTIFIER)
               && match(lookAhead(4), TokenClass.LSBR))) {
-
-            parseType();
-            expect(TokenClass.IDENTIFIER);
+            // struct var array declaration
+            type = parseType();
+            iden = expect(TokenClass.IDENTIFIER);
             expect(TokenClass.LSBR);
-            expect(TokenClass.INT_LITERAL);
+            n = expect(TokenClass.INT_LITERAL);
             expect(TokenClass.RSBR);
             expect(TokenClass.SC);
+            arrayFlag = true;
 
-            parseVarDecls();
         }
+
+        if (type != null && iden != null) {
+            if (arrayFlag) {
+                if (n != null) {
+                    type = new ArrayType(type, n.data);
+                    results.add(new VarDecl(type, iden.data));
+                    rests = parseVarDecls();
+                }
+            } else {
+                results.add(new VarDecl(type, iden.data));
+                rests = parseVarDecls();
+            }
+        }
+
+        results.addAll(rests);
+        return results;
     }
 
     private void parseFunDecls() {
