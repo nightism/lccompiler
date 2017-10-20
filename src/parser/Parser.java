@@ -292,7 +292,7 @@ public class Parser {
         expect(TokenClass.RBRA);
     }
 
-    private void parseStmt() {
+    private Stmt parseStmt() {
         if (accept(TokenClass.LBRA)) {
             parseBlk();
         } else if (accept(TokenClass.WHILE)) {
@@ -309,6 +309,8 @@ public class Parser {
             }
             expect(TokenClass.SC);
         }
+
+        return null;
     }
 
     private void parseWhileStat() {
@@ -321,38 +323,44 @@ public class Parser {
         parseStmt();
     }
 
-    private void parseIfStat() {
+    private If parseIfStat() {
         // if condition
         expect(TokenClass.IF);
         expect(TokenClass.LPAR);
         Expr cond = parseExp();
         expect(TokenClass.RPAR);
 
-
         // statement
-        parseStmt();
+        Stmt ifStmt = parseStmt();
+        Stmt elseStmt = null;
 
         // else statement
         if (accept(TokenClass.ELSE)) {
             expect(TokenClass.ELSE);
-            parseStmt();
+            elseStmt = parseStmt();
+        }
+
+        if (ifStmt != null || cond != null) {
+            return new If(cond, ifStmt, elseStmt);
+        } else {
+            return null;
         }
     }
 
     private Return parseReturnStat() {
         expect(TokenClass.RETURN);
-        Return stmt = null;
+        Return stmtReturn = null;
 
         // return expression
         if (!accept(TokenClass.SC)) {
             Expr exp = parseExp();
-            stmt = new Return(exp);
+            stmtReturn = new Return(exp);
         } else {
-            stmt = new Return();
+            stmtReturn = new Return();
         }
         expect(TokenClass.SC);
 
-        return stmt;
+        return stmtReturn;
     }
 
     private Expr parseExp() {

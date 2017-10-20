@@ -5,11 +5,13 @@ import java.util.List;
 public class If extends Stmt {
 
     public final Expr cond;
-    public final List<Stmt> stmts;
+    public final Stmt ifStmt;
+    public final Stmt elseStmt;
 
-    public If(Expr cond, List<Stmt> stmts) {
+    public If(Expr cond, Stmt ifStmt, Stmt elseStmt) {
         this.cond = cond;
-        this.stmts = stmts;
+        this.ifStmt = ifStmt;
+        this.elseStmt = elseStmt;
     }
 
     public <T> T accept(ASTVisitor<T> v) {
