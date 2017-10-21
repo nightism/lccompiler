@@ -11,4 +11,8 @@ public interface ASTVisitor<T> {
 
     // to complete ... (should have one visit method for each concrete AST node class)
     public T visitPointerType(PointerType pt);
+
+    public T visitArrayAccessExpr(ArrayAccessExpr aae);
+    public T visitBinOp(BinOp bo);
+
 }

@@ -2,10 +2,6 @@ package ast;
 
 public class BinOp extends Expr {
 
-    public enum Op {
-        ADD, SUB, MUL, DIV, MOD, GT, LT, GE, LE, NE, EQ, OR, AND;
-    }
-
     public final Expr operandOne;
     public final Expr operandTwo;
     public final Op operator;

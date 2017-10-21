@@ -1,7 +1,6 @@
 package parser;
 
 import ast.*;
-import ast.BinOp.Op;
 
 import ast.BaseType;
 import ast.PointerType;
@@ -642,7 +641,7 @@ public class Parser {
             } else if (t.tokenClass == TokenClass.INT_LITERAL) {
                 return new IntLiteral(t.data);
             } else if (t.tokenClass == TokenClass.CHAR_LITERAL) {
-                return new CharLiteral(t.data);
+                return new ChrLiteral(t.data);
             } else if (t.tokenClass == TokenClass.STRING_LITERAL) {
                 return new StrLiteral(t.data);
             } else {
@@ -678,7 +677,7 @@ public class Parser {
                 }
                 expect(TokenClass.RPAR);
 
-                return new FunCall(token.data, funcallParam);
+                return new FunCallExpr(token.data, funcallParam);
             } else if (token != null) {
                 return new VarExpr(token.data);
             } else {
