@@ -10,7 +10,6 @@ public class StrLiteral extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitStrLiteral(this);
+        return v.visitStrLiteral(this);
     }
 }

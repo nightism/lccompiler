@@ -14,7 +14,6 @@ public class IntLiteral extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitIntLiteral(this);
+        return v.visitIntLiteral(this);
     }
 }

@@ -13,7 +13,6 @@ public class While extends Stmt {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitWhile(this);
+        return v.visitWhile(this);
     }
 }

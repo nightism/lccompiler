@@ -10,7 +10,6 @@ public class FieldAccessExpr extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitFieldAccessExpr(this);
+        return v.visitFieldAccessExpr(this);
     }
 }

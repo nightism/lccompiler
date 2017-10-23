@@ -10,7 +10,6 @@ public class ArrayAccessExpr extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitArrayAccessExpr(this);
+        return v.visitArrayAccessExpr(this);
     }
 }

@@ -14,7 +14,6 @@ public class ChrLiteral extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitChrLiteral(this);
+        return v.visitChrLiteral(this);
     }
 }

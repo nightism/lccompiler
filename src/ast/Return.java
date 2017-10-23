@@ -13,7 +13,6 @@ public class Return extends Stmt {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitReturn(this);
+        return v.visitReturn(this);
     }
 }

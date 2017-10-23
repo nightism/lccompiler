@@ -11,7 +11,6 @@ public class ExprStmt extends Stmt {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitExprStmt(this);
+        return v.visitExprStmt(this);
     }
 }

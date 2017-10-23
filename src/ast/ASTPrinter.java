@@ -13,8 +13,18 @@ public class ASTPrinter implements ASTVisitor<Void> {
     @Override
     public Void visitBlock(Block b) {
         writer.print("Block(");
-        // to complete
-        writer.print("(");
+        String delimiter = "";
+        for (VarDecl vd : b.varDecls) {
+            writer.print(delimiter);
+            delimiter = ",";
+            vd.accept(this);
+        }
+        for (Stmt s : b.stmts) {
+            writer.print(delimiter);
+            delimiter = ",";
+            s.accept(this);
+        }
+        writer.print(")");
         return null;
     }
 
@@ -85,9 +95,106 @@ public class ASTPrinter implements ASTVisitor<Void> {
         return null;
     }
 
+
+
     // to complete ...
     @Override
     public Void visitPointerType(PointerType pt) {
         return null;
     }
+
+
+
+
+
+    @Override
+    public Void visitArrayAccessExpr(ArrayAccessExpr aae) {
+        return null;
+    }
+
+    @Override
+    public Void visitArrayType(ArrayType at) {
+        return null;
+    }
+
+    @Override
+    public Void visitAssign(Assign a) {
+        return null;
+    }
+
+    @Override
+    public Void visitBinOp(BinOp bo) {
+        return null;
+    }
+
+    @Override
+    public Void visitChrLiteral(ChrLiteral cl) {
+        return null;
+    }
+
+    @Override
+    public Void visitExprStmt(ExprStmt es) {
+        return null;
+    }
+
+    @Override
+    public Void visitFieldAccessExpr(FieldAccessExpr faexp) {
+        return null;
+    }
+
+    @Override
+    public Void visitFunCallExpr(FunCallExpr fce) {
+        return null;
+    }
+
+    @Override
+    public Void visitIf(If i) {
+        return null;
+    }
+
+    @Override
+    public Void visitIntLiteral(IntLiteral il) {
+        return null;
+    }
+
+    @Override
+    public Void visitOp(Op o) {
+        return null;
+    }
+
+    @Override
+    public Void visitReturn(Return r) {
+        return null;
+    }
+
+    @Override
+    public Void visitSizeOfExpr(SizeOfExpr soe) {
+        return null;
+    }
+
+    @Override
+    public Void visitStrLiteral(StrLiteral sl) {
+        return null;
+    }
+
+    @Override
+    public Void visitStructType(StructType st) {
+        return null;
+    }
+
+    @Override
+    public Void visitTypecastExpr(TypecastExpr tce) {
+        return null;
+    }
+
+    @Override
+    public Void visitValueAtExpr(ValueAtExpr vae) {
+        return null;
+    }
+
+    @Override
+    public Void visitWhile(While w) {
+        return null;
+    }
 }
+

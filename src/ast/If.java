@@ -15,7 +15,6 @@ public class If extends Stmt {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // If v.visitIf(this);
+        return v.visitIf(this);
     }
 }

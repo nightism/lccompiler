@@ -8,7 +8,6 @@ public class ValueAtExpr extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitValueAtExpr(this);
+        return v.visitValueAtExpr(this);
     }
 }

@@ -12,7 +12,6 @@ public class FunCallExpr extends Expr {
     }
 
     public <T> T accept(ASTVisitor<T> v) {
-        return null;
-        // return v.visitFunCallExpr(this);
+        return v.visitFunCallExpr(this);
     }
 }
