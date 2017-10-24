@@ -81,7 +81,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitChrLiteral(ChrLiteral cl) {
-        return null;
+        return BaseType.CHAR;
     }
 
     @Override
@@ -106,7 +106,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitIntLiteral(IntLiteral il) {
-        return null;
+        return BaseType.INT;
     }
 
     @Override
@@ -116,7 +116,6 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitPointerType(PointerType t) {
-        // To be completed...
         return null;
     }
 
@@ -132,7 +131,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitStrLiteral(StrLiteral sl) {
-        return null;
+        return new ArrayType(BaseType.CHAR, sl.str.length() + 1);
     }
 
     @Override
