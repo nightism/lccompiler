@@ -220,6 +220,10 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
             fce.decl = ((FunSymbol) sym).fd;
         }
 
+        for (Expr e : fce.params) {
+            e.accept(this);
+        }
+
         return null;
     }
 
