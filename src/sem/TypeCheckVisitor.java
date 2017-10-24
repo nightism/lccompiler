@@ -12,19 +12,24 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitBaseType(BaseType bt) {
-        // To be completed...
+        // nothing to check
         return null;
     }
 
     @Override
     public Type visitStructTypeDecl(StructTypeDecl st) {
-        // To be completed...
+        // nothing to check
         return null;
     }
 
     @Override
     public Type visitBlock(Block b) {
-        // To be completed...
+        for (VarDecl vd : b.varDecls) {
+            vd.accept(this);
+        }
+        for (Stmt s : b.stmts) {
+            s.accept(this);
+        }
         return null;
     }
 
@@ -61,8 +66,12 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitVarExpr(VarExpr v) {
-       v.type = v.vd.type;
-       return v.type;
+        if (v.decl != null) {
+            v.type = v.decl.type;
+            return v.type;
+        } else {
+            return null;
+        }
     }
 
     /** 
@@ -86,6 +95,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitBinOp(BinOp bo) {
+        // nothing to check
         return null;
     }
 
@@ -96,7 +106,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitExprStmt(ExprStmt es) {
-        return null;
+        return es.exp.accept(this);
     }
 
     @Override
@@ -106,6 +116,24 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitFunCallExpr(FunCallExpr fce) {
+        if (fce.decl != null) {
+            FunDecl fd = fce.decl;
+            if (fce.params.size() != fd.params.size()) {
+                error("wrong number of parameters when calling " + fce.name);
+            } else {
+                int counter = 0;
+                for (Expr e : fce.params) {
+                    Type t = e.accept(this);
+                    Type expected = fd.params.get(counter).type;
+                    if (t != expected) {
+                        error("wrong type of the " + (counter + 1) + "th paramter passed when calling " + fce.name);
+                    }
+                    counter ++;
+                }
+            }
+            fce.type = fd.type;
+            return fce.type;
+        }
         return null;
     }
 
