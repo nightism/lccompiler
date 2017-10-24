@@ -6,6 +6,8 @@ public class FunCallExpr extends Expr {
     public final String name;
     public final List<Expr> params;
 
+    public FunDecl decl;
+
     public FunCallExpr(String name, List<Expr> params) {
         this.name = name;
         this.params = params;
