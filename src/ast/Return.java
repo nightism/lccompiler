@@ -2,7 +2,7 @@ package ast;
 
 public class Return extends Stmt {
 
-    public final Expr exp;
+    public final Expr exp; // could be null
 
     public Return() {
         this.exp = null;

@@ -355,6 +355,8 @@ public class Parser {
                 } else {
                     resultStmt = null;
                 }
+            } else {
+                resultStmt = new ExprStmt(assignee);
             }
             expect(TokenClass.SC);
             return resultStmt;

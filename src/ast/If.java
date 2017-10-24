@@ -6,7 +6,7 @@ public class If extends Stmt {
 
     public final Expr cond;
     public final Stmt ifStmt;
-    public final Stmt elseStmt;
+    public final Stmt elseStmt; // could be null
 
     public If(Expr cond, Stmt ifStmt, Stmt elseStmt) {
         this.cond = cond;
