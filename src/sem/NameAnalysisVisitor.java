@@ -14,8 +14,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
     }
 
     public NameAnalysisVisitor() {
-        this.scope = new Scope(null);
-        addBuildinFun();
+        this(new Scope(null));
     }
 
     public Void addBuildinFun() {
