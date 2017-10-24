@@ -109,11 +109,10 @@ public class ASTPrinter implements ASTVisitor<Void> {
     @Override
     public Void visitStructTypeDecl(StructTypeDecl st) {
         writer.print("StructTypeDecl(");
-        writer.print(st.name);
-        String delimiter = "";
+        writer.print(st.name.name);
+        String delimiter = ",";
         for (VarDecl vd : st.varDecls) {
             writer.print(delimiter);
-            delimiter = ",";
             vd.accept(this);
         }
         writer.print(")");
