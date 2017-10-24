@@ -159,7 +159,9 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
         return null;
     }
 
-    /** more visitor methods */
+    /**
+        more visitor methods
+    */
 
     @Override
     public Void visitArrayAccessExpr(ArrayAccessExpr aae) {

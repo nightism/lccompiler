@@ -31,8 +31,16 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitProgram(Program p) {
-       // To be completed...
-       return null;
+        for (StructTypeDecl std : p.structTypeDecls) {
+            std.accept(this);
+        }
+        for (VarDecl vd : p.varDecls) {
+            vd.accept(this);
+        }
+        for (FunDecl fd : p.funDecls) {
+            fd.accept(this);
+        }
+        return null;
     }
 
     @Override
@@ -47,7 +55,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
        return null;
     }
 
-    // To be completed...
+    /** 
+        more visitor methods 
+    */
 
     @Override
     public Type visitArrayAccessExpr(ArrayAccessExpr aae) {
