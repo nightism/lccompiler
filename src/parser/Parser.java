@@ -274,7 +274,7 @@ public class Parser {
         if (type != null && iden != null) {
             if (arrayFlag) {
                 if (n != null) {
-                    type = new ArrayType(type, n.data);
+                    type = new ArrayType(type, new IntLiteral(n.data));
                     results.add(new VarDecl(type, iden.data));
                     rests = parseVarDecls();
                 }

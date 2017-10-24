@@ -77,7 +77,7 @@ public class ASTPrinter implements ASTVisitor<Void> {
 
     @Override
     public Void visitVarExpr(VarExpr v) {
-        writer.print("Var(");
+        writer.print("VarExpr(");
         writer.print(v.name);
         writer.print(")");
         return null;
@@ -85,13 +85,27 @@ public class ASTPrinter implements ASTVisitor<Void> {
 
     @Override
     public Void visitBaseType(BaseType bt) {
-        // to complete ...
+        if (bt == BaseType.INT) {
+            writer.print("INT");
+        } else if (bt == BaseType.CHAR) {
+            writer.print("CHAR");
+        } else {
+            writer.print("VOID");
+        }
         return null;
     }
 
     @Override
     public Void visitStructTypeDecl(StructTypeDecl st) {
-        // to complete ...
+        writer.print("StructTypeDecl(");
+        writer.print(st.name);
+        String delimiter = "";
+        for (VarDecl vd : st.varDecls) {
+            writer.print(delimiter);
+            delimiter = ",";
+            vd.accept(this);
+        }
+        writer.print(")");
         return null;
     }
 
@@ -100,6 +114,9 @@ public class ASTPrinter implements ASTVisitor<Void> {
     // to complete ...
     @Override
     public Void visitPointerType(PointerType pt) {
+        writer.print("PointerType(");
+        pt.type.accept(this);
+        writer.print(")");
         return null;
     }
 
@@ -109,11 +126,21 @@ public class ASTPrinter implements ASTVisitor<Void> {
 
     @Override
     public Void visitArrayAccessExpr(ArrayAccessExpr aae) {
+        writer.print("ArrayAccessExpr(");
+        aae.base.accept(this);
+        writer.print(",");
+        aae.index.accept(this);
+        writer.print(")");
         return null;
     }
 
     @Override
     public Void visitArrayType(ArrayType at) {
+        writer.print("ArrayType(");
+        at.type.accept(this);
+        writer.print(",");
+        at.number.accept(this);
+        writer.print(")");
         return null;
     }
 
@@ -154,6 +181,9 @@ public class ASTPrinter implements ASTVisitor<Void> {
 
     @Override
     public Void visitIntLiteral(IntLiteral il) {
+        writer.print("IntLiteral(");
+        writer.print(il.number);
+        writer.print(")");
         return null;
     }
 

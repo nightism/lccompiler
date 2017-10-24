@@ -6,15 +6,11 @@ package ast;
 public class ArrayType implements Type {
 
     public final Type type;
-    public int number;
+    public IntLiteral number;
 
-    public ArrayType (Type t, int n) {
+    public ArrayType (Type t, IntLiteral n) {
         this.type = t;
         this.number = n;
-    }
-
-    public ArrayType (Type t, String n) {
-        this(t, Integer.valueOf(n));
     }
 
     public <T> T accept(ASTVisitor<T> v) {
