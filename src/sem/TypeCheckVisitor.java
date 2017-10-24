@@ -4,6 +4,12 @@ import ast.*;
 
 public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
+    Scope scope;
+
+    public TypeCheckVisitor(Scope scope) {
+        this.scope = scope;
+    }
+
     @Override
     public Type visitBaseType(BaseType bt) {
        // To be completed...
