@@ -47,18 +47,9 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
        return null;
     }
 
+
+
     // To be completed...
-    @Override
-    public Void visitPointerType(PointerType pt) {
-       // To be completed...
-       return null;
-    }
-
-
-
-
-
-
 
     @Override
     public Void visitArrayAccessExpr(ArrayAccessExpr aae) {
@@ -113,6 +104,12 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
     @Override
     public Void visitOp(Op o) {
         return null;
+    }
+
+    @Override
+    public Void visitPointerType(PointerType pt) {
+       // To be completed...
+       return null;
     }
 
     @Override

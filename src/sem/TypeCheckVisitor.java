@@ -48,16 +48,6 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
     }
 
     // To be completed...
-    @Override
-    public Type visitPointerType(PointerType t) {
-        // To be completed...
-        return null;
-    }
-
-
-
-
-
 
     @Override
     public Type visitArrayAccessExpr(ArrayAccessExpr aae) {
@@ -111,6 +101,12 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitOp(Op o) {
+        return null;
+    }
+
+    @Override
+    public Type visitPointerType(PointerType t) {
+        // To be completed...
         return null;
     }
 
