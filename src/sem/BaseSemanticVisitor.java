@@ -8,16 +8,15 @@ package sem;
  */
 public abstract class BaseSemanticVisitor<T> implements SemanticVisitor<T> {
     private int errors;
-    
-    
+
     public BaseSemanticVisitor() {
         errors = 0;
     }
-    
+
     public int getErrorCount() {
         return errors;
     }
-    
+
     protected void error(String message) {
         System.err.println("semantic error: " + message);
         errors++;
