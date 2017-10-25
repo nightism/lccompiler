@@ -80,6 +80,15 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitArrayAccessExpr(ArrayAccessExpr aae) {
+        Type t1 = aae.base.accept(this);
+        Type t2 = aae.index.accept(this);
+        if ((t1 instanceof PointerType || t1 instanceof ArrayType) && t2 == BaseType.INT) {
+            aae.type = t1;
+            // TODO check array length
+            return aae.type;
+        } else {
+            error("type check fails when accessing array");
+        }
         return null;
     }
 
@@ -95,7 +104,27 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitBinOp(BinOp bo) {
-        // nothing to check
+        Type t1 = bo.operandOne.accept(this);
+        Type t2 = bo.operandTwo.accept(this);
+        if (bo.operator != Op.NE && bo.operator != Op.EQ) {
+            if (t1 == BaseType.INT && t2 == BaseType.INT) {
+                bo.type = BaseType.INT;
+                return bo.type;
+            } else {
+                error("Wrong type(s) of operands encountered in Binary Operation.");
+            }
+        } else {
+            if (t1 == BaseType.VOID || t2 == BaseType.VOID
+                || t1 == null || t2 == null
+                || t1 instanceof StructType || t2 instanceof StructType
+                || t1 instanceof ArrayType || t2 instanceof ArrayType
+                || t1 != t2) {
+                error("Wrong type(s) of operands encountered in Binary Operation.");
+            } else {
+                bo.type = BaseType.INT;
+                return bo.type;
+            }
+        }
         return null;
     }
 
