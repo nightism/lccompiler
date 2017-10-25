@@ -117,25 +117,27 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
 
     @Override
     public Void visitExprStmt(ExprStmt es) {
-        // nothing to check
+        es.exp.accept(this);
         return null;
     }
 
     @Override
     public Void visitFieldAccessExpr(FieldAccessExpr faexp) {
-        // TODO 
-        // should be checked in TypeCheckVisitor
+        faexp.base.accept(this);
         return null;
     }
 
     @Override
     public Void visitFunCallExpr(FunCallExpr fce) {
-        // nothing to check
+        for (Expr e : fce.params) {
+            e.accept(this);
+        }
         return null;
     }
 
     @Override
     public Void visitIf(If i) {
+        i.cond.accept(this);
         i.ifStmt.accept(this);
         if (i.elseStmt != null) {
             i.elseStmt.accept(this);
@@ -163,7 +165,9 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
 
     @Override
     public Void visitReturn(Return r) {
-        // nothing to check
+        if (r.exp != null) {
+            r.exp.accept(this);
+        }
         return null;
     }
 
@@ -195,12 +199,13 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
 
     @Override
     public Void visitValueAtExpr(ValueAtExpr vae) {
-        // nothing to check
+        vae.exp.accept(this);
         return null;
     }
 
     @Override
     public Void visitWhile(While w) {
+        w.cond.accept(this);
         w.stmt.accept(this);
         return null;
     }
