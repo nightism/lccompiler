@@ -10,8 +10,8 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
     Map<String, StructTypeDecl> structTypeList;
     // Scope scope;
 
-    public StructTypeCheckVisitor () {
-        this.structTypeList = new HashMap<String, StructTypeDecl>();
+    public StructTypeCheckVisitor (Map<String, StructTypeDecl> structTypeList) {
+        this.structTypeList = structTypeList;
         // this.scope = new Scope();
     }
 

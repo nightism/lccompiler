@@ -2,12 +2,18 @@ package sem;
 
 import ast.*;
 
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
 public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
-    Scope scope;
+    Map<String, StructTypeDecl> structTypeList;
+    Type returnType;
 
-    public TypeCheckVisitor(Scope scope) {
-        this.scope = scope;
+    public TypeCheckVisitor(Map<String, StructTypeDecl> structTypeList) {
+        this.structTypeList = structTypeList;
+        returnType = null;
     }
 
     @Override
@@ -35,10 +41,13 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitFunDecl(FunDecl p) {
+        Type oldReturnType = this.returnType;
+        this.returnType = p.type;
         for (VarDecl vd : p.params) {
             vd.accept(this);
         }
         p.block.accept(this);
+        this.returnType = oldReturnType;
        return null;
     }
 
@@ -98,11 +107,22 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitArrayType(ArrayType at) {
+        // nothing to check
         return null;
     }
 
     @Override
     public Type visitAssign(Assign a) {
+        Type t1 = a.assignee.accept(this);
+        Type t2 = a.assigner.accept(this);
+
+        if (t1 == null || t2 == null) {
+            error("assignment type cannot be null.");
+        } else if (!t1.getClass().equals(t2.getClass())) {
+            error("expressions must be of the same type on the both sides of the assignment.");
+        } else if (t1 == BaseType.VOID || t1 instanceof ArrayType) {
+            error("invalid expression type for assignment.");
+        }
         return null;
     }
 
@@ -143,6 +163,27 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitFieldAccessExpr(FieldAccessExpr faexp) {
+        Type baseType = faexp.base.accept(this);
+        if (!(baseType instanceof StructType)) {
+            error("field access must be operated on a struct variable");
+        }
+        String structName = ((StructType)baseType).name;
+        StructTypeDecl sd = structTypeList.get(structName);
+        if (sd != null) {
+            List<VarDecl> vds = sd.varDecls;
+            boolean fieldDefined = false;
+            Type fieldType = null;
+            for (VarDecl vd : vds) {
+                if (vd.varName.equals(faexp.field)) {
+                    fieldDefined = true;
+                    faexp.type = vd.type;
+                    return faexp.type;
+                }
+            }
+            if (!fieldDefined) {
+                error("field " + faexp.field + " is not defined in structure " + structName + ".");
+            }
+        }
         return null;
     }
 
@@ -171,6 +212,14 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitIf(If i) {
+        Type condType = i.cond.accept(this);
+        if (condType != BaseType.INT) {
+            error("type check fails on if condition.");
+        }
+        i.ifStmt.accept(this);
+        if (i.elseStmt != null) {
+            i.elseStmt.accept(this);
+        }
         return null;
     }
 
@@ -181,16 +230,30 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitOp(Op o) {
+        // nothing to check
         return null;
     }
 
     @Override
     public Type visitPointerType(PointerType t) {
+        // nothing to check
         return null;
     }
 
     @Override
     public Type visitReturn(Return r) {
+        if (r.exp != null) {
+            Type t = r.exp.accept(this);
+            if (!t.getClass().equals(this.returnType.getClass())) {
+                error("the function return type is wrong.");
+            } else if (t instanceof ArrayType && ((ArrayType)t).number.number != ((ArrayType)returnType).number.number) {
+                error("the legnth of function return type (ArrayType) is wrong.");
+            }
+        } else if (this.returnType != BaseType.VOID) {
+            error("the function return type is not void.");
+        } else {
+
+        }
         return null;
     }
 
@@ -207,6 +270,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitStructType(StructType st) {
+        // nothing to check
         return null;
     }
 
@@ -233,13 +297,19 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
             vae.type = ((PointerType) t).type;
             return vae.type;
         } else {
-            error("Type check fails when accessing pointer value");
+            error("type check fails when accessing pointer value");
         }
         return null;
     }
 
     @Override
     public Type visitWhile(While w) {
+        Type condType = w.cond.accept(this);
+        if (condType != BaseType.INT) {
+            error("type check fails on while condition.");
+        }
+
+        w.stmt.accept(this);
         return null;
     }
 

@@ -1,6 +1,8 @@
 package sem;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import ast.*;
 
@@ -8,11 +10,12 @@ public class SemanticAnalyzer {
 
     public int analyze(ast.Program prog) {
         Scope scope = buildInScope();
+        Map<String, StructTypeDecl> structTypeList = new HashMap<String, StructTypeDecl>();
         // List of visitors
         ArrayList<SemanticVisitor> visitors = new ArrayList<SemanticVisitor>();
         visitors.add(new NameAnalysisVisitor(scope));
-        visitors.add(new StructTypeCheckVisitor());
-        visitors.add(new TypeCheckVisitor(scope));
+        visitors.add(new StructTypeCheckVisitor(structTypeList));
+        visitors.add(new TypeCheckVisitor(structTypeList));
 
         // Error accumulator
         int errors = 0;

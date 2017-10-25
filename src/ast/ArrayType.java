@@ -6,7 +6,7 @@ package ast;
 public class ArrayType implements Type {
 
     public final Type type;
-    public IntLiteral number;
+    public final IntLiteral number;
 
     public ArrayType (Type t, IntLiteral n) {
         this.type = t;
