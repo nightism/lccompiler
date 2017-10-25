@@ -112,6 +112,14 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitAssign(Assign a) {
+        if (!(a.assignee instanceof VarExpr
+              || a.assignee instanceof FieldAccessExpr
+              || a.assignee instanceof ArrayAccessExpr
+              || a.assignee instanceof ValueAtExpr)) {
+            error("the type of the left-hand side of the assignment statement is invalid.");
+            return null;
+        }
+
         Type t1 = a.assignee.accept(this);
         Type t2 = a.assigner.accept(this);
 
@@ -248,8 +256,12 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
                 error("error occurs in the return statement.");
             } else if (!t.getClass().equals(this.returnType.getClass())) {
                 error("the function return type is wrong.");
-            } else if (t instanceof ArrayType && ((ArrayType)t).number.number != ((ArrayType)returnType).number.number) {
-                error("the legnth of function return type (ArrayType) is wrong.");
+            } else if (t instanceof ArrayType) {
+                if (((ArrayType)t).number.number != ((ArrayType)returnType).number.number) {
+                    error("the legnth of function return type (ArrayType) is wrong.");
+                } else {
+                    // nothing to do, everything is fine
+                }
             }
         } else if (this.returnType != BaseType.VOID) {
             error("the function return type is not void.");
@@ -288,6 +300,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         } else if (t instanceof ArrayType && tce.targetType instanceof PointerType) {
             tce.type = tce.targetType;
             return tce.type;
+        } else {
+            error("undefined typecast expression encounterd.");
         }
         return null;
     }
