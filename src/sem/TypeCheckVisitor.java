@@ -82,8 +82,12 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
     public Type visitArrayAccessExpr(ArrayAccessExpr aae) {
         Type t1 = aae.base.accept(this);
         Type t2 = aae.index.accept(this);
-        if ((t1 instanceof PointerType || t1 instanceof ArrayType) && t2 == BaseType.INT) {
-            aae.type = t1;
+        if (t1 instanceof PointerType && t2 == BaseType.INT) {
+            aae.type = ((PointerType) t1).type;
+            // TODO check array length
+            return aae.type;
+        } else if (t1 instanceof ArrayType && t2 == BaseType.INT) {
+            aae.type = ((ArrayType) t1).type;
             // TODO check array length
             return aae.type;
         } else {
@@ -193,7 +197,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitSizeOfExpr(SizeOfExpr soe) {
-        return null;
+        soe.type = BaseType.INT;
+        return soe.type;
     }
 
     @Override
@@ -208,11 +213,23 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitTypecastExpr(TypecastExpr tce) {
+        Type t = tce.exp.accept(this);
+
+        if (t == BaseType.CHAR && tce.type == BaseType.INT) {
+
+        }
         return null;
     }
 
     @Override
     public Type visitValueAtExpr(ValueAtExpr vae) {
+        Type t = vae.exp.accept(this);
+        if (t instanceof PointerType) {
+            vae.type = ((PointerType) t).type;
+            return vae.type;
+        } else {
+            error("Type check fails when accessing pointer value");
+        }
         return null;
     }
 
