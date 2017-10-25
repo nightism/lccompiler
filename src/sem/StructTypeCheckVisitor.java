@@ -169,7 +169,7 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
 
     @Override
     public Void visitSizeOfExpr(SizeOfExpr soe) {
-        // nothing to check
+        soe.target.accept(this);
         return null;
     }
 
@@ -189,7 +189,7 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
 
     @Override
     public Void visitTypecastExpr(TypecastExpr tce) {
-        tce.type.accept(this);
+        tce.targetType.accept(this);
         return null;
     }
 
