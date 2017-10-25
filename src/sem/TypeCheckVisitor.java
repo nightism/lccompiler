@@ -83,8 +83,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         }
     }
 
-    /** 
-        more visitor methods 
+    /**
+        more visitor methods
     */
 
     @Override
@@ -93,7 +93,6 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         Type t2 = aae.index.accept(this);
         if (t1 instanceof PointerType && t2 == BaseType.INT) {
             aae.type = ((PointerType) t1).type;
-            // TODO check array length
             return aae.type;
         } else if (t1 instanceof ArrayType && t2 == BaseType.INT) {
             aae.type = ((ArrayType) t1).type;
@@ -166,6 +165,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         Type baseType = faexp.base.accept(this);
         if (!(baseType instanceof StructType)) {
             error("field access must be operated on a struct variable");
+            return null;
         }
         String structName = ((StructType)baseType).name;
         StructTypeDecl sd = structTypeList.get(structName);
@@ -244,7 +244,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
     public Type visitReturn(Return r) {
         if (r.exp != null) {
             Type t = r.exp.accept(this);
-            if (!t.getClass().equals(this.returnType.getClass())) {
+            if (t == null) {
+                error("error occurs in the return statement.");
+            } else if (!t.getClass().equals(this.returnType.getClass())) {
                 error("the function return type is wrong.");
             } else if (t instanceof ArrayType && ((ArrayType)t).number.number != ((ArrayType)returnType).number.number) {
                 error("the legnth of function return type (ArrayType) is wrong.");
@@ -252,7 +254,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         } else if (this.returnType != BaseType.VOID) {
             error("the function return type is not void.");
         } else {
-
+            // return type is null do nothing
         }
         return null;
     }
