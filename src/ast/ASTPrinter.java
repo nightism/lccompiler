@@ -138,7 +138,7 @@ public class ASTPrinter implements ASTVisitor<Void> {
         writer.print("ArrayType(");
         at.type.accept(this);
         writer.print(",");
-        at.number.accept(this);
+        writer.print(at.number.number);
         writer.print(")");
         return null;
     }
@@ -302,4 +302,3 @@ public class ASTPrinter implements ASTVisitor<Void> {
         return null;
     }
 }
-
