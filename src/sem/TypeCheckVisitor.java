@@ -142,7 +142,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
                 bo.type = BaseType.INT;
                 return bo.type;
             } else {
-                error("Wrong type(s) of operands encountered in Binary Operation.");
+                error("Wrong type(s) of operands encountered in Binary Operation. BaseType.INT is expected.");
             }
         } else {
             if (t1 == BaseType.VOID || t2 == BaseType.VOID
