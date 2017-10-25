@@ -121,10 +121,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
             if (t1 == BaseType.VOID || t2 == BaseType.VOID
                 || t1 == null || t2 == null
                 || t1 instanceof StructType || t2 instanceof StructType
-                || t1 instanceof ArrayType || t2 instanceof ArrayType
-                || t1 != t2) {
+                || t1 instanceof ArrayType || t2 instanceof ArrayType) {
                 error("Wrong type(s) of operands encountered in Binary Operation.");
-            } else {
+            } else if (t1.getClass().equals(t2.getClass())) {
                 bo.type = BaseType.INT;
                 return bo.type;
             }
@@ -158,7 +157,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
                 for (Expr e : fce.params) {
                     Type t = e.accept(this);
                     Type expected = fd.params.get(counter).type;
-                    if (t != expected) {
+                    if (!t.getClass().equals(expected.getClass())) {
                         error("wrong type of the " + (counter + 1) + "th paramter passed when calling " + fce.name);
                     }
                     counter ++;
@@ -214,9 +213,15 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
     @Override
     public Type visitTypecastExpr(TypecastExpr tce) {
         Type t = tce.exp.accept(this);
-
-        if (t == BaseType.CHAR && tce.type == BaseType.INT) {
-
+        if (t == BaseType.CHAR && tce.targetType == BaseType.INT) {
+            tce.type = BaseType.INT;
+            return tce.type;
+        } else if (t instanceof PointerType && tce.targetType instanceof PointerType) {
+            tce.type = tce.targetType;
+            return tce.type;
+        } else if (t instanceof ArrayType && tce.targetType instanceof PointerType) {
+            tce.type = tce.targetType;
+            return tce.type;
         }
         return null;
     }
