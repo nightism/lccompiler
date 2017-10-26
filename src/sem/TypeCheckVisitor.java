@@ -16,6 +16,23 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
         returnType = null;
     }
 
+    private boolean typeEqual(Type a, Type b) {
+        if (!a.getClass().equals(b.getClass())) {
+            return false;
+        } else if (a instanceof BaseType && a != b) {
+            return false;
+        } else if (a instanceof PointerType) {
+            return typeEqual(((PointerType)a).type, ((PointerType)b).type);
+        } else if (a instanceof ArrayType) {
+            return (((ArrayType)a).number.number == ((ArrayType)b).number.number)
+                    && typeEqual(((ArrayType)a).type, ((ArrayType)b).type);
+        } else if (a instanceof StructType) {
+            return ((StructType)a).name.equals(((StructType)b).name);
+        } else {
+            return true;
+        }
+    }
+
     @Override
     public Type visitBaseType(BaseType bt) {
         // nothing to check
@@ -143,19 +160,23 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
                 return bo.type;
             } else {
                 error("Wrong type(s) of operands encountered in Binary Operation. BaseType.INT is expected.");
+                return null;
             }
         } else {
             if (t1 == BaseType.VOID || t2 == BaseType.VOID
                 || t1 == null || t2 == null
                 || t1 instanceof StructType || t2 instanceof StructType
                 || t1 instanceof ArrayType || t2 instanceof ArrayType) {
-                error("Wrong type(s) of operands encountered in Binary Operation.");
-            } else if (t1.getClass().equals(t2.getClass())) {
+                error("Wrong type(s) of operands encountered in Binary Operation (NE/EQ).");
+                return null;
+            } else if (typeEqual(t1, t2)) {
                 bo.type = BaseType.INT;
                 return bo.type;
+            } else {
+                error("operands are of different types in Binary Operation (NE/EQ).");
+                return null;
             }
         }
-        return null;
     }
 
     @Override
