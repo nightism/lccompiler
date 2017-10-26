@@ -142,7 +142,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
         if (t1 == null || t2 == null) {
             error("assignment type cannot be null.");
-        } else if (!t1.getClass().equals(t2.getClass())) {
+        } else if (!typeEqual(t1, t2)) {
             error("expressions must be of the same type on the both sides of the assignment.");
         } else if (t1 == BaseType.VOID || t1 instanceof ArrayType) {
             error("invalid expression type for assignment.");
