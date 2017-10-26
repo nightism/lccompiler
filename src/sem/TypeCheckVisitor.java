@@ -35,7 +35,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitBaseType(BaseType bt) {
-        return bt;
+        // return bt;
+        return null;
     }
 
     @Override
@@ -121,7 +122,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitArrayType(ArrayType at) {
-        return at.type.accept(this);
+        // return at.type.accept(this);
+        return null;
     }
 
     @Override
@@ -227,7 +229,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
                     Type expected = fd.params.get(counter).type;
                     if (t == null) {
                         error("the parameter passed when calling function " + fce.name + " is undefined.");
-                    }else if (typeEqual(t, expected)) {
+                    }else if (!typeEqual(t, expected)) {
                         error("wrong type of the " + (counter + 1) + "th paramter passed when calling " + fce.name);
                     }
                     counter ++;
@@ -266,7 +268,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitPointerType(PointerType t) {
-        t.type.accept(this);
+        // t.type.accept(this);
         return null;
     }
 
@@ -302,7 +304,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitStructType(StructType st) {
-        return st;
+        // return st;
+        return null;
     }
 
     @Override
