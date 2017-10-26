@@ -193,7 +193,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
     public Type visitFieldAccessExpr(FieldAccessExpr faexp) {
         Type baseType = faexp.base.accept(this);
         if (!(baseType instanceof StructType)) {
-            error("field access must be operated on a struct variable");
+            error("field access must be operated on a struct type expression.");
             return null;
         }
         String structName = ((StructType)baseType).name;
@@ -222,12 +222,15 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
             FunDecl fd = fce.decl;
             if (fce.params.size() != fd.params.size()) {
                 error("wrong number of parameters when calling " + fce.name);
+                return null;
             } else {
                 int counter = 0;
                 for (Expr e : fce.params) {
                     Type t = e.accept(this);
                     Type expected = fd.params.get(counter).type;
-                    if (!t.getClass().equals(expected.getClass())) {
+                    if (t == null) {
+                        error("the parameter passed when calling function " + fce.name + " is undefined.");
+                    }else if (typeEqual(t, expected)) {
                         error("wrong type of the " + (counter + 1) + "th paramter passed when calling " + fce.name);
                     }
                     counter ++;
@@ -235,8 +238,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
             }
             fce.type = fd.type;
             return fce.type;
+        } else {
+            return null;
         }
-        return null;
     }
 
     @Override
