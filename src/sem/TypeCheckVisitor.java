@@ -35,13 +35,11 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitBaseType(BaseType bt) {
-        // nothing to check
-        return null;
+        return bt;
     }
 
     @Override
     public Type visitStructTypeDecl(StructTypeDecl st) {
-        // nothing to check
         return null;
     }
 
@@ -123,8 +121,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitArrayType(ArrayType at) {
-        // nothing to check
-        return null;
+        return at.type.accept(this);
     }
 
     @Override
@@ -269,7 +266,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitPointerType(PointerType t) {
-        // nothing to check
+        t.type.accept(this);
         return null;
     }
 
@@ -279,14 +276,10 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
             Type t = r.exp.accept(this);
             if (t == null) {
                 error("error occurs in the return statement.");
-            } else if (!t.getClass().equals(this.returnType.getClass())) {
+            } else if (!typeEqual(t, this.returnType)) {
                 error("the function return type is wrong.");
-            } else if (t instanceof ArrayType) {
-                if (((ArrayType)t).number.number != ((ArrayType)returnType).number.number) {
-                    error("the legnth of function return type (ArrayType) is wrong.");
-                } else {
-                    // nothing to do, everything is fine
-                }
+            } else {
+                // nothing to do, everything is fine
             }
         } else if (this.returnType != BaseType.VOID) {
             error("the function return type is not void.");
@@ -309,8 +302,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
     @Override
     public Type visitStructType(StructType st) {
-        // nothing to check
-        return null;
+        return st;
     }
 
     @Override
