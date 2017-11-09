@@ -61,19 +61,64 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitBlock(Block b) {
-        // TODO: to complete
+        if (b.varDecls.size() != 0) {
+            writer.println("    .data");
+        }
+        for (VarDecl vd : b.varDecls) {
+            vd.accept(this);
+        }
+
+        writer.println("    .text");
+        for (Stmt st : b.stmts) {
+            st.accept(this);
+        }
+
+        writer.println();
         return null;
     }
 
     @Override
     public Register visitFunDecl(FunDecl p) {
-        // TODO: to complete
+        if (p.params.size() != 0) {
+            writer.println("    .data");
+        }
+        for (VarDecl vd : p.params) {
+            vd.accept(this);
+        }
+
+        writer.println("    .text");
+        writer.println(p.name + ":");
+
+        p.block.accept(this);
+
+        // TODO tobe refined
+        if (p.name.equals("main")) {
+            writer.println("    li   $v0, 10");
+            writer.println("    syscall");
+        }
+
+
         return null;
     }
 
     @Override
     public Register visitProgram(Program p) {
-        // TODO: to complete
+        writer.println(".data");
+        for (VarDecl vd : p.varDecls) {
+            vd.accept(this);
+        }
+
+        writer.println(".text");
+        writer.println("    j    main");
+        writer.println();
+
+        generatePrintI();
+
+        for (FunDecl fd : p.funDecls) {
+            fd.accept(this);
+        }
+
+        writer.flush();
         return null;
     }
 
@@ -120,6 +165,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitExprStmt(ExprStmt es) {
+        Register result = es.exp.accept(this);
+        if (result != null) {
+            freeRegister(result);
+        }
         return null;
     }
 
@@ -130,7 +179,17 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitFunCallExpr(FunCallExpr fce) {
-        return null;
+        for (Expr p : fce.params) {
+            Register r = p.accept(this);
+            // TODO to be finished and refined
+            writer.println("    add  $a0, $zero, " + r.toString());
+            freeRegister(r);
+        }
+        writer.println("    jal  " + fce.name);
+        Register result = getRegister();
+        // TODO to be refined
+        writer.println("    add  " + result.toString() + ", $zero, $v0");
+        return result;
     }
 
     @Override
@@ -140,7 +199,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitIntLiteral(IntLiteral il) {
-        return null;
+        Register result = getRegister();
+        writer.println("    addi " + result.toString() + ", $zero, " + il.number);
+        return result;
     }
 
     @Override
@@ -186,5 +247,16 @@ public class CodeGenerator implements ASTVisitor<Register> {
     @Override
     public Register visitWhile(While w) {
         return null;
+    }
+
+    public void generatePrintI() {
+      // to be refined with STACK oprations
+        writer.println("    .text");
+        writer.println("print_i:");
+        writer.println("    li   $v0, 1");
+        writer.println("    add  $t0, $a0, $zero");
+        writer.println("    syscall");
+        writer.println("    jr   $ra");
+        writer.println();
     }
 }
