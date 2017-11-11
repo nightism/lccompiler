@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.EmptyStackException;
 import java.util.Stack;
+import java.util.HashMap;
 
 public class CodeGenerator implements ASTVisitor<Register> {
 
@@ -14,11 +15,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
      * Simple register allocator.
      */
 
+    private int num;
+
     // contains all the free temporary registers
     private Stack<Register> freeRegs = new Stack<Register>();
 
     public CodeGenerator() {
         freeRegs.addAll(Register.tmpRegs);
+        num = 0;
     }
 
     private class RegisterAllocationError extends Error {}
@@ -73,12 +77,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
             st.accept(this);
         }
 
-        writer.println();
         return null;
     }
 
     @Override
     public Register visitFunDecl(FunDecl p) {
+        HashMap<String, Integer> offsetMap = new HashMap<String, Integer>();
+        // TODO to be finished 
+
         if (p.params.size() != 0) {
             writer.println("    .data");
         }
@@ -91,7 +97,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
         p.block.accept(this);
 
-        // TODO tobe refined
+        // TODO tobe refined, need to check return statement
         if (p.name.equals("main")) {
             writer.println("    li   $v0, 10");
             writer.println("    syscall");
@@ -105,12 +111,12 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitProgram(Program p) {
         writer.println(".data");
         for (VarDecl vd : p.varDecls) {
-            vd.accept(this);
+            // TODO customised visit glocal var decl
+            // vd.accept(this);
         }
 
         writer.println(".text");
         writer.println("    j    main");
-        writer.println();
 
         generatePrintI();
 
@@ -160,7 +166,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitChrLiteral(ChrLiteral cl) {
-        return null;
+        Register result = getRegister();
+        writer.println("    addi " + result.toString() + ", $zero, " + ((int) cl.character));
+        return result;
     }
 
     @Override
@@ -181,13 +189,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitFunCallExpr(FunCallExpr fce) {
         for (Expr p : fce.params) {
             Register r = p.accept(this);
-            // TODO to be finished and refined
+            // TODO store in a0-14 or store in the stack
             writer.println("    add  $a0, $zero, " + r.toString());
             freeRegister(r);
         }
+        // TODO store and restore program counter
         writer.println("    jal  " + fce.name);
         Register result = getRegister();
-        // TODO to be refined
+        // TODO store return value
         writer.println("    add  " + result.toString() + ", $zero, $v0");
         return result;
     }
@@ -226,7 +235,16 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitStrLiteral(StrLiteral sl) {
-        return null;
+        num ++;
+        Register result = getRegister();
+        // define String literal in data section
+        writer.println("    .data");
+        String str = sl.str.replaceAll("\\", "\\\\");
+        writer.println("str" + num + ":  .asciiz  \"" + str + "\"");
+        // back to text section and store the string in register
+        writer.println("    .text");
+        writer.println("    la " + result.toString() + ", str" + num);
+        return result;
     }
 
     @Override

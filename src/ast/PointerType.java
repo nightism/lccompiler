@@ -15,4 +15,8 @@ public class PointerType implements Type {
         return v.visitPointerType(this);
     }
 
+    public int size() {
+        return type.size();
+    }
+
 }

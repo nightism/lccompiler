@@ -21,4 +21,8 @@ public class ArrayType implements Type {
         return v.visitArrayType(this);
     }
 
+    public int size() {
+        return number.number * type.size();
+    }
+
 }

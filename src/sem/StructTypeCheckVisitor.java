@@ -187,7 +187,10 @@ public class StructTypeCheckVisitor extends BaseSemanticVisitor<Void> {
     public Void visitStructType(StructType st) {
         if (this.structTypeList.get(st.name) == null) {
             error("structure type " + st.name + " does not exist.");
+        } else if (st.sd == null) {
+            st.sd = this.structTypeList.get(st.name);
         }
+
         return null;
     }
 
