@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.EmptyStackException;
 import java.util.Stack;
-import java.util.HashMap;
 
 public class CodeGenerator implements ASTVisitor<Register> {
 
@@ -16,6 +15,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
      */
 
     private int num;
+    private int offset;
 
     // contains all the free temporary registers
     private Stack<Register> freeRegs = new Stack<Register>();
@@ -23,6 +23,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public CodeGenerator() {
         freeRegs.addAll(Register.tmpRegs);
         num = 0;
+        offset = 0;
     }
 
     private class RegisterAllocationError extends Error {}
@@ -82,27 +83,25 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitFunDecl(FunDecl p) {
-        HashMap<String, Integer> offsetMap = new HashMap<String, Integer>();
-        // TODO to be finished 
+        // HashMap<String, Integer> offsetMap = new HashMap<String, Integer>();
+        // TODO to be finished
 
-        if (p.params.size() != 0) {
-            writer.println("    .data");
-        }
-        for (VarDecl vd : p.params) {
-            vd.accept(this);
-        }
-
+        // label the function with its name
         writer.println("    .text");
         writer.println(p.name + ":");
 
-        p.block.accept(this);
+        // change $fp to $sp 
+        writer.println("    add  " + Register.fp.toString()+ ", " + Register.sp.toString() +", $zero");
 
-        // TODO tobe refined, need to check return statement
-        if (p.name.equals("main")) {
-            writer.println("    li   $v0, 10");
-            writer.println("    syscall");
+        // save all parameters on stack
+        for (VarDecl vd : p.params) {
+            // TODO
+            // vd.accept(this);
         }
 
+        p.block.accept(this);
+        writer.println("    jr   " + Register.ra.toString() + "");
+        writer.println();
 
         return null;
     }
@@ -116,7 +115,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
 
         writer.println(".text");
-        writer.println("    j    main");
+        writer.println("    jal  main");
+        writer.println("    li   $v0, 10");
+        writer.println("    syscall");
+        writer.println();
 
         generatePrintI();
 
@@ -161,7 +163,33 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitBinOp(BinOp bo) {
-        return null;
+        Register operandOne = bo.operandOne.accept(this);
+        Register operandTwo = bo.operandTwo.accept(this);
+        Register result = getRegister();
+
+        if (operandOne != null && operandTwo != null) {
+            switch(bo.operator) {
+                case ADD:
+                    writer.println("    add  " + result.toString() + ", " + operandOne.toString() + ", " + operandTwo.toString());
+                    break;
+                case SUB:
+                    writer.println("    sub  " + result.toString() + ", " + operandOne.toString() + ", " + operandTwo.toString());
+                    break;
+                case MUL:
+                    writer.println("    mult " + operandOne.toString() + ", " + operandTwo.toString());
+                    writer.println("    mflo " + result.toString());
+                    break;
+                default: break;
+            }
+        }
+
+        if (operandOne != null) {
+            freeRegister(operandOne);
+        }
+        if (operandTwo != null) {
+            freeRegister(operandTwo);
+        }
+        return result;
     }
 
     @Override
@@ -187,17 +215,54 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitFunCallExpr(FunCallExpr fce) {
+        int numOfParam = 0;
+
+        // save $fp and $ra on the stack
+        writer.println("    sw   " + Register.fp.toString()+ ", 0(" + Register.sp.toString() +")");
+        writer.println("    sw   " + Register.ra.toString() + ", -4(" + Register.sp.toString() +")");
+        writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", -8");
+        offset -= 8;
+
+        // TODO passing parameters
         for (Expr p : fce.params) {
             Register r = p.accept(this);
-            // TODO store in a0-14 or store in the stack
-            writer.println("    add  $a0, $zero, " + r.toString());
-            freeRegister(r);
+
+            if (r == null) {
+                break;
+            }
+
+            // store in a0-3 or store in the stack
+            // TODO stuct in the first 4 arg
+            if (numOfParam < 4) {
+                writer.println("    add  $a" + numOfParam + ", $zero, " + r.toString());
+                freeRegister(r);
+            } else {
+                // TODO to be finished this part
+                writer.println("    # more than 4 args");
+            }
+            numOfParam ++;
         }
+
+        // resest offset
+        int oldStackOffset = offset;
+        offset = 0;
+
         // TODO store and restore program counter
         writer.println("    jal  " + fce.name);
+
+        // restore $fp and $ra
+        writer.println("    lw   " + Register.fp.toString()+ ", 8(" + Register.sp.toString() +")");
+        writer.println("    lw   " + Register.ra.toString() + ", 4(" + Register.sp.toString() +")");
+        writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", 8");
+        offset += 8;
+
+        // TODO store return value -> struct more than 4 bytes
         Register result = getRegister();
-        // TODO store return value
         writer.println("    add  " + result.toString() + ", $zero, $v0");
+
+        // restore offset
+        offset = oldStackOffset;
+
         return result;
     }
 
@@ -272,9 +337,11 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_i:");
         writer.println("    li   $v0, 1");
+        writer.println("    sw   $t0, 0(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    jr   $ra");
+        writer.println("    lw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
 }
