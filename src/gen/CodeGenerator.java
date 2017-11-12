@@ -14,15 +14,17 @@ public class CodeGenerator implements ASTVisitor<Register> {
      * Simple register allocator.
      */
 
-    private int num;
-    private int offset;
+    private int strNum;    // string literal index number
+    private int boNum;     // binary operatoin index number
+    private int offset;    // variable stack offset
 
     // contains all the free temporary registers
     private Stack<Register> freeRegs = new Stack<Register>();
 
     public CodeGenerator() {
         freeRegs.addAll(Register.tmpRegs);
-        num = 0;
+        strNum = 0;
+        boNum = 0;
         offset = 0;
     }
 
@@ -179,7 +181,80 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     writer.println("    mult " + operandOne.toString() + ", " + operandTwo.toString());
                     writer.println("    mflo " + result.toString());
                     break;
-                default: break;
+                case DIV:
+                    writer.println("    div  " + operandOne.toString() + ", " + operandTwo.toString());
+                    writer.println("    mflo " + result.toString());
+                    break;
+                case MOD:
+                    writer.println("    div  " + operandOne.toString() + ", " + operandTwo.toString());
+                    writer.println("    mfhi " + result.toString());
+                    break;
+                case GT:
+                    writer.println("    bgt  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case LT:
+                    writer.println("    blt  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case GE:
+                    writer.println("    bge  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case LE:
+                    writer.println("    ble  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case NE:
+                    writer.println("    bne  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case EQ:
+                    writer.println("    beq  " + operandOne.toString() + ", " + operandTwo.toString() + ", BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case OR:
+                    writer.println("    bne  " + operandOne.toString() + ", $zero, BINOP" + boNum);
+                    writer.println("    bne  " + operandTwo.toString() + ", $zero, BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 0");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 1");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
+                case AND:
+                    writer.println("    beq  " + operandOne.toString() + ", $zero, BINOP" + boNum);
+                    writer.println("    beq  " + operandTwo.toString() + ", $zero, BINOP" + boNum);
+                    writer.println("    li   " + result.toString() + ", 1");
+                    writer.println("    j    " + "BINOPJUMP" + boNum);
+                    writer.println("BINOP" + boNum + ":  li   " + result.toString() + ", 0");
+                    writer.println("BINOPJUMP" + boNum + ":");
+                    boNum ++;
+                    break;
             }
         }
 
@@ -300,15 +375,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitStrLiteral(StrLiteral sl) {
-        num ++;
+        strNum ++;
         Register result = getRegister();
         // define String literal in data section
         writer.println("    .data");
         String str = sl.str.replaceAll("\\", "\\\\");
-        writer.println("str" + num + ":  .asciiz  \"" + str + "\"");
+        writer.println("str" + strNum + ":  .asciiz  \"" + str + "\"");
         // back to text section and store the string in register
         writer.println("    .text");
-        writer.println("    la " + result.toString() + ", str" + num);
+        writer.println("    la " + result.toString() + ", str" + strNum);
         return result;
     }
 
