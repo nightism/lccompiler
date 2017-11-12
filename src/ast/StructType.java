@@ -24,6 +24,7 @@ public class StructType implements Type {
         for (VarDecl vd : sd.varDecls) {
             int s = vd.type.size() - 1;
             s = s / 4 + 1;
+            s = s * 4;
             result += s;
         }
         return result;

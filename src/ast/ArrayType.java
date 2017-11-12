@@ -24,6 +24,7 @@ public class ArrayType implements Type {
     public int size() {
         int result = number.number * type.size() - 1;
         result = result / 4 + 1;
+        result *= 4;
         return result;
     }
 
