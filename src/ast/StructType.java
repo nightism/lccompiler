@@ -22,7 +22,9 @@ public class StructType implements Type {
         if (sd == null)
             return 0;
         for (VarDecl vd : sd.varDecls) {
-            result += vd.type.size();
+            int s = vd.type.size() - 1;
+            s = s / 4 + 1;
+            result += s;
         }
         return result;
     }

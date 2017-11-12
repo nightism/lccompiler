@@ -22,7 +22,9 @@ public class ArrayType implements Type {
     }
 
     public int size() {
-        return number.number * type.size();
+        int result = number.number * type.size() - 1;
+        result = result / 4 + 1;
+        return result;
     }
 
 }
