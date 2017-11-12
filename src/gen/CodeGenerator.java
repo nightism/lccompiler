@@ -68,11 +68,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitBlock(Block b) {
-        if (b.varDecls.size() != 0) {
-            writer.println("    .data");
-        }
         for (VarDecl vd : b.varDecls) {
-            vd.accept(this);
+            // vd.accept(this);
         }
 
         writer.println("    .text");
@@ -112,9 +109,25 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitProgram(Program p) {
         writer.println(".data");
         for (VarDecl vd : p.varDecls) {
-            // TODO customised visit glocal var decl
-            // vd.accept(this);
+            // save variable name
+            String varName = vd.varName;
+
+            if (vd.type instanceof StructType) {
+                // declare global struct variables
+                StructType t = (StructType) vd.type;
+                String structName = t.name;
+                for (VarDecl v : t.sd.varDecls) {
+                    int size = ((v.type.size() - 1) / 4 + 1) * 4;
+                    // name : varName_structName_fieldName
+                    writer.print(varName + "_" + structName + "_" + v.varName);
+                    writer.println(":  .space  " + size);
+                }
+            } else {
+                // declare normal variables
+                writer.println(varName + ":  .space  " + vd.type.size());
+            }
         }
+        writer.println();
 
         writer.println(".text");
         writer.println("    jal  main");
@@ -382,7 +395,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
         Register result = getRegister();
         // define String literal in data section
         writer.println("    .data");
-        String str = sl.str.replaceAll("\\", "\\\\");
+        String str = sl.str;
+        writer.println(str.length());
         writer.println("str" + strNum + ":  .asciiz  \"" + str + "\"");
         // back to text section and store the string in register
         writer.println("    .text");
