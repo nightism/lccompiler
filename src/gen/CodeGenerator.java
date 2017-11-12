@@ -370,7 +370,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitSizeOfExpr(SizeOfExpr soe) {
-        return null;
+        int size = soe.type.size();
+        Register result = getRegister();
+        writer.println("    li   " + result.toString() + ", " + size);
+        return result;
     }
 
     @Override
