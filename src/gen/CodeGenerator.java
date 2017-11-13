@@ -78,10 +78,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 offset = offset + 1;
             } else if (size == 4) {
                 // int or int*
-                while (offset % 4 != 0) {
-                    offset ++;
-                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
-                }
+                rectifyStackPointer();
                 writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
                 vd.offset = offset;
                 offset = offset + 4;
@@ -89,6 +86,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 // TODO
             }
         }
+
+        rectifyStackPointer();
 
         for (Stmt st : b.stmts) {
             st.accept(this);
@@ -124,10 +123,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     offset = offset + 1;
                 } else { // size == 4
                     // int or int*
-                    while (offset % 4 != 0) {
-                        offset ++;
-                        writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
-                    }
+                    rectifyStackPointer();
+
                     writer.println("    sw   $a" + paramIndex + ", 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
                     vd.offset = offset;
@@ -182,11 +179,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    syscall");
         writer.println();
 
-        generatePrintI();
-
         for (FunDecl fd : p.funDecls) {
             fd.accept(this);
         }
+
+        generatePrintI();
+        generatePrintC();
+        generatePrintS();
+
 
         writer.flush();
         return null;
@@ -468,7 +468,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitTypecastExpr(TypecastExpr tce) {
-        return null;
+        Register r = tce.exp.accept(this);
+        return r;
     }
 
     @Override
@@ -483,9 +484,24 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
 
     /**
-        more visitor methods
+        util methods
     */
 
+    public void rectifyStackPointer() {
+        int rectifier = 0;
+        while (offset % 4 != 0) {
+            rectifier ++;
+            offset ++;
+        }
+        if (rectifier != 0) {
+            writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + rectifier);
+        }
+    }
+
+
+    /**
+        build-in functions
+    */
 
     public void generatePrintI() {
         writer.println("    .text");
@@ -514,7 +530,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public void generatePrintS() {
         writer.println("    .text");
         writer.println("print_s:");
-        writer.println("    li   $v0, 11");
+        writer.println("    li   $v0, 4");
         writer.println("    sw   $t0, 0(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
