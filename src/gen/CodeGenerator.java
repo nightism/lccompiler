@@ -453,7 +453,6 @@ public class CodeGenerator implements ASTVisitor<Register> {
         // define String literal in data section
         writer.println("    .data");
         String str = sl.str;
-        writer.println(str.length());
         writer.println("str" + strNum + ":  .asciiz  \"" + str + "\"");
         // back to text section and store the string in register
         writer.println("    .text");
