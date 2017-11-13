@@ -492,6 +492,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
             elseStmt.accept(this);
         }
         writer.println("ENDIFELSE" + stmtNum + ": ");
+        stmtNum ++;
         return null;
     }
 
@@ -573,7 +574,16 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         }
 
-        writer.println();
+        writer.println("STARTWHILECOND" + stmtNum + ": ");
+        writer.println("    bne  " + r.toString() + ", $zero, WHILESTATEMENT" + stmtNum);
+        writer.println("    j    ENDWHILE" + stmtNum);
+        writer.println("WHILESTATEMENT" + stmtNum + ": ");
+        s.accept(this);
+        writer.println("    j    STARTWHILECOND" + stmtNum);
+        writer.println("ENDWHILE" + stmtNum + ": ");
+        freeRegister(r);
+
+        return null;
     }
 
 
