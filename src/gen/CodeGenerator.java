@@ -111,11 +111,11 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 // retreive struct var from the stack
                 rectifyStackPointer();
                 int structSize = vd.type.size();
+                vd.offset = offset;
                 while (structSize > 0) {
                     writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
                     writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
-                    vd.offset = offset;
                     offset = offset + 4;
                     structSize = structSize - 4;
                     stackedParamSize = stackedParamSize - 4;
@@ -381,22 +381,57 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", -8");
         offset -= 8;
 
+        int stackedSize = 0;
         // TODO passing parameters
-        for (Expr p : fce.params) {
+        for (int i = 0; i < fce.params.size(); i ++) {
+        // for (Expr p : fce.params) {
+            Expr p = fce.params.get(i);
+            Type t = fce.decl.params.get(i).type;
+
             Register r = p.accept(this);
 
             if (r == null) {
                 break;
             }
 
-            // store in a0-3 or store in the stack
-            // TODO stuct in the first 4 arg
-            if (numOfParam < 4) {
+            if (t instanceof StructType) {
+                // stacked struct parameters
+                rectifyStackPointer();
+                while (stackedSize %  4 != 0) {
+                    stackedSize ++;
+                }
+
+                int structSize = t.size();
+                int size = 0; // size has been stacked
+                while (structSize > 0) {
+                    writer.println("    lw   $a0, -" + size + "(" + r.toString() + ")");
+                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    offset = offset + 4;
+                    structSize = structSize - 4;
+                    size = size + 4;
+                    stackedSize = stackedSize + 4;
+                }
+            } else if (numOfParam < 4) {
+                // store the first 4 in a0-3
                 writer.println("    add  $a" + numOfParam + ", $zero, " + r.toString());
                 freeRegister(r);
             } else {
-                // TODO to be finished this part
-                writer.println("    # more than 4 args");
+                // stacked more parameters (more than 4)
+                int size = t.size();
+                if (size >= 4) {
+                    rectifyStackPointer();
+                    while (stackedSize %  4 != 0) {
+                        stackedSize ++;
+                    }
+                    writer.println("    sw   " + r.toString() + ", 0(" + Register.sp.toString() + ")");
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    stackedSize += 4;
+                } else {
+                    writer.println("    sb   " + r.toString() + ", 0(" + Register.sp.toString() + ")");
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
+                    stackedSize += 1;
+                }
             }
             numOfParam ++;
         }
@@ -407,6 +442,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
         // jump back to the caller function
         writer.println("    jal  " + fce.name);
+
+        // clear all stacked parameters
+        writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", " + stackedSize);
 
         // restore $fp and $ra
         writer.println("    lw   " + Register.fp.toString()+ ", 8(" + Register.sp.toString() +")");
