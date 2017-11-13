@@ -423,7 +423,6 @@ public class CodeGenerator implements ASTVisitor<Register> {
             } else if (numOfParam < 4) {
                 // store the first 4 in a0-3
                 writer.println("    add  $a" + numOfParam + ", $zero, " + r.toString());
-                freeRegister(r);
             } else {
                 // stacked more parameters (more than 4)
                 int size = t.size();
@@ -441,6 +440,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     stackedSize += 1;
                 }
             }
+            freeRegister(r);
             numOfParam ++;
         }
 
@@ -482,6 +482,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
 
         writer.println("    bne  " + condResult.toString() + ", $zero, IFSTATEMENT" + stmtNum);
+        freeRegister(condResult);
         writer.println("    j    ELSESTATEMENT" + stmtNum);
         writer.println("IFSTATEMENT" + stmtNum + ": ");
         ifStmt.accept(this);
@@ -564,7 +565,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitWhile(While w) {
-        return null;
+        Expr cond = w.cond;
+        Stmt s = w.stmt;
+
+        Register r = cond.accept(this);
+        if (r == null) {
+            return null;
+        }
+
+        writer.println();
     }
 
 
