@@ -151,10 +151,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
                     writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    vd.offset = offset;
+                    offset = offset + 4;
                 } else {
                     writer.println("    lb   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
                     writer.println("    sb   $a0, 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
+                    vd.offset = offset;
+                    offset = offset + 1;
                 }
             }
             paramIndex ++;
@@ -225,16 +229,25 @@ public class CodeGenerator implements ASTVisitor<Register> {
     @Override
     public Register visitVarExpr(VarExpr v) {
         int size = v.decl.type.size();
-        int thisOffset = v.decl.offset;
         Register result = getRegister();
         String memAddress = "";
 
-        if (thisOffset == -1) {
-            // memAddress = v.varName;
+        if (v.decl.offset == -1) {
+            Register address = getRegister();
+            writer.println("    la   " + address.toString() + ", " + v.name);
+            memAddress = "(" + address.toString() + ")";
+            freeRegister(address);
         } else {
-            // TODO
+            int thisOffset = offset - v.decl.offset;
+            memAddress = "" + thisOffset + "(" + Register.sp.toString() + ")";
         }
-        return null;
+
+        if (size == 1) {
+            writer.println("    lb   " + result.toString() + ", " + memAddress);
+        } else {
+            writer.println("    lw   " + result.toString() + ", " + memAddress);
+        }
+        return result;
     }
 
 
@@ -620,6 +633,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 }
                 result += vd.type.size();
             }
+            index ++ ;
         }
         return result;
     }
