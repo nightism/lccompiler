@@ -17,6 +17,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     private int strNum;    // string literal index number
     private int boNum;     // binary operatoin index number
+    private int stmtNum;   // if-else and while statement index number
     private int offset;    // variable stack offset
 
     // contains all the free temporary registers
@@ -26,6 +27,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
         freeRegs.addAll(Register.tmpRegs);
         strNum = 0;
         boNum = 0;
+        stmtNum = 0;
         offset = 0;
     }
 
@@ -215,13 +217,19 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitVarDecl(VarDecl vd) {
-        // TODO: to complete
         return null;
     }
 
     @Override
     public Register visitVarExpr(VarExpr v) {
-        // TODO: to complete
+        int size = v.decl.type.size();
+        int thisOffset = v.decl.offset;
+
+        if (thisOffset == -1) {
+
+        } else {
+
+        }
         return null;
     }
 
@@ -464,6 +472,25 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitIf(If i) {
+        Expr cond =  i.cond;
+        Stmt ifStmt = i.ifStmt;
+        Stmt elseStmt = i.elseStmt;
+
+        Register condResult = cond.accept(this);
+        if (condResult == null) {
+            return null;
+        }
+
+        writer.println("    bne  " + condResult.toString() + ", $zero, IFSTATEMENT" + stmtNum);
+        writer.println("    j    ELSESTATEMENT" + stmtNum);
+        writer.println("IFSTATEMENT" + stmtNum + ": ");
+        ifStmt.accept(this);
+        writer.println("    j    ENDIFELSE" + stmtNum);
+        writer.println("ELSESTATEMENT" + stmtNum + ": ");
+        if (elseStmt != null) {
+            elseStmt.accept(this);
+        }
+        writer.println("ENDIFELSE" + stmtNum + ": ");
         return null;
     }
 
