@@ -189,8 +189,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     writer.print(varName + "_" + structName + "_" + v.varName);
                     writer.println(":  .space  " + size);
                 }
-            } else {
+            } else if (vd.type.size() <= 4) {
                 // declare normal variables
+                writer.println(varName + ":  .word  0");
+            } else {
                 writer.println(varName + ":  .space  " + vd.type.size());
             }
         }
@@ -224,11 +226,13 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitVarExpr(VarExpr v) {
         int size = v.decl.type.size();
         int thisOffset = v.decl.offset;
+        Register result = getRegister();
+        String memAddress = "";
 
         if (thisOffset == -1) {
-
+            // memAddress = v.varName;
         } else {
-
+            // TODO
         }
         return null;
     }
@@ -394,7 +398,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
         for (int i = 0; i < fce.params.size(); i ++) {
         // for (Expr p : fce.params) {
             Expr p = fce.params.get(i);
-            Type t = fce.decl.params.get(i).type;
+            VarDecl v = fce.decl.params.get(i);
+            Type t = v.type;
 
             Register r = p.accept(this);
 
@@ -410,14 +415,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 }
 
                 int structSize = t.size();
+                int storageDirection = (v.offset == -1) ? 4 : -4;
                 int size = 0; // size has been stacked
                 while (structSize > 0) {
-                    writer.println("    lw   $a0, -" + size + "(" + r.toString() + ")");
+                    writer.println("    lw   $a0, " + size + "(" + r.toString() + ")");
                     writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
                     offset = offset + 4;
                     structSize = structSize - 4;
-                    size = size + 4;
+                    size = size + storageDirection;
                     stackedSize = stackedSize + 4;
                 }
             } else if (numOfParam < 4) {
