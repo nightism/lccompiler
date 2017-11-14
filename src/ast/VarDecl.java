@@ -11,7 +11,11 @@ public class VarDecl implements ASTNode {
     public VarDecl(Type type, String varName) {
         this.type = type;
         this.varName = varName;
-        this.offset = -1;
+        if (type.size() == 0) {
+            this.offset = 0;
+        } else {
+            this.offset = -1;
+        }
     }
 
     public <T> T accept(ASTVisitor<T> v) {

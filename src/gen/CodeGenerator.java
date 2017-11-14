@@ -88,9 +88,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 while (totalParamSize % 4 != 0) {
                     totalParamSize ++;
                 }
-                writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
-                offset = offset + size;
-                vd.offset = offset;
+                if (size == 4) {
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
+                    offset = offset + size;
+                    vd.offset = offset;
+                } else if (vd.type instanceof StructType) {
+                    vd.offset = offset + Math.min(4, size);
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
+                    offset = offset + size;
+                }
             }
         }
 
@@ -569,7 +575,12 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitSizeOfExpr(SizeOfExpr soe) {
-        int size = soe.type.size();
+        Type t = soe.type;
+        int size = 0;
+        while (t instanceof PointerType) {
+            t = ((PointerType) t).type;
+        }
+        size = t.size();
         Register result = getRegister();
         writer.println("    li   " + result.toString() + ", " + size);
         return result;
@@ -602,7 +613,24 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitValueAtExpr(ValueAtExpr vae) {
-        return null;
+        Register r = vae.exp.accept(this);
+        if (r == null) {
+            return null;
+        } else {
+            Register result = getRegister();
+            PointerType t = (PointerType) vae.type;
+            int size = t.type.size();
+            if (size == 1) {
+                writer.println("    lb   " + result.toString() + ", (" + r.toString() + ")");
+            } else if (size == 4) {
+                writer.println("    lw   " + result.toString() + ", (" + r.toString() + ")");
+            } else {
+                // save the address
+                writer.println("    add  " + result.toString() + ", $zero, " + r.toString() + ")");
+            }
+            freeRegister(r);
+            return result;
+        }
     }
 
     @Override
@@ -632,7 +660,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
         util methods
     */
 
-    public void rectifyStackPointer() {
+    private void rectifyStackPointer() {
         int rectifier = 0;
         // if (offset % 4 != 0) {
         //     rectifier += 4;
@@ -646,7 +674,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
     }
 
-    public int totalStackedParamSize(List<VarDecl> varDecls) {
+    private int totalStackedParamSize(List<VarDecl> varDecls) {
         int index = 0;
         int result = 0;
         for (VarDecl vd : varDecls) {
@@ -665,7 +693,6 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
         return result;
     }
-
 
     /**
         build-in functions

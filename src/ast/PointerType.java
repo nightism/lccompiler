@@ -16,7 +16,7 @@ public class PointerType implements Type {
     }
 
     public int size() {
-        return type.size();
+        return 4;
     }
 
 }
