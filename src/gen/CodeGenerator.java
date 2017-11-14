@@ -71,19 +71,26 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitBlock(Block b) {
+        int oldOffset = offset;
+
+        int totalParamSize = 0;
         for (VarDecl vd : b.varDecls) {
             int size = vd.type.size();
+            totalParamSize += size;
             if (size == 1) {
                 // char or char* or void*
                 writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
-                vd.offset = offset;
                 offset = offset + 1;
+                vd.offset = offset;
             } else { // size >= 4 and size % 4 == 0
                 // int or int* or struct related
                 rectifyStackPointer();
+                while (totalParamSize % 4 != 0) {
+                    totalParamSize ++;
+                }
                 writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
-                vd.offset = offset;
                 offset = offset + size;
+                vd.offset = offset;
             }
         }
 
@@ -93,11 +100,18 @@ public class CodeGenerator implements ASTVisitor<Register> {
             st.accept(this);
         }
 
+        offset = oldOffset;
+
+        writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", " + totalParamSize);
+
         return null;
     }
 
     @Override
     public Register visitFunDecl(FunDecl p) {
+        int oldOffset = offset;
+        offset = 0;
+
         // label the function with its name
         writer.println("    .text");
         writer.println(p.name + ":");
@@ -113,14 +127,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 // retreive struct var from the stack
                 rectifyStackPointer();
                 int structSize = vd.type.size();
-                vd.offset = offset;
+                vd.offset = offset + 4;
                 while (structSize > 0) {
-                    writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
-                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
+                    stackedParamSize = stackedParamSize - 4;
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
+                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")    #" + vd.varName);
                     offset = offset + 4;
                     structSize = structSize - 4;
-                    stackedParamSize = stackedParamSize - 4;
                 }
             } else if (paramIndex < 4) {
                 // less than 4 variables
@@ -128,17 +142,17 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 int size = vd.type.size();
                 if (size == 1) {
                     // char or char* or void*
-                    writer.println("    sb   $a" + paramIndex + ", 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
-                    vd.offset = offset;
+                    writer.println("    sb   $a" + paramIndex + ", 0(" + Register.sp.toString() + ")    #" + vd.varName);
                     offset = offset + 1;
+                    vd.offset = offset;
                 } else { // size == 4
                     // int or int*
                     rectifyStackPointer();
-                    writer.println("    sw   $a" + paramIndex + ", 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
-                    vd.offset = offset;
+                    writer.println("    sw   $a" + paramIndex + ", 0(" + Register.sp.toString() + ")    #" + vd.varName);
                     offset = offset + 4;
+                    vd.offset = offset;
                 }
             } else {
                 // retreive more variables from the stack
@@ -148,21 +162,28 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     while (stackedParamSize % 4 != 0) {
                         stackedParamSize --;
                     }
-                    writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
-                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
+                    // int locator = (stackedParamSize + offset); -> related to $sp
+                    stackedParamSize -= 4;
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
-                    vd.offset = offset;
+                    writer.println("    lw   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
+                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")    #" + vd.varName);
                     offset = offset + 4;
-                } else {
-                    writer.println("    lb   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
-                    writer.println("    sb   $a0, 0(" + Register.sp.toString() + ")");
-                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
                     vd.offset = offset;
+                } else {
+                    // int locator = (stackedParamSize + offset);
+                    stackedParamSize -= 1;
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
+                    writer.println("    lb   $a0, " + stackedParamSize + "(" + Register.fp.toString() + ")");
+                    writer.println("    sb   $a0, 0(" + Register.sp.toString() + ")    #" + vd.varName);
                     offset = offset + 1;
+                    vd.offset = offset;
                 }
             }
             paramIndex ++;
         }
+
+        // recitfy stack pointer after passing the parameters
+        rectifyStackPointer();
 
         p.block.accept(this);
 
@@ -398,16 +419,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitFunCallExpr(FunCallExpr fce) {
-        int numOfParam = 0;
-
         // save $fp and $ra on the stack
-        writer.println("    sw   " + Register.fp.toString()+ ", 0(" + Register.sp.toString() +")");
-        writer.println("    sw   " + Register.ra.toString() + ", -4(" + Register.sp.toString() +")");
         writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", -8");
-        offset -= 8;
+        writer.println("    sw   " + Register.fp.toString()+ ", 4(" + Register.sp.toString() +")");
+        writer.println("    sw   " + Register.ra.toString() + ", 0(" + Register.sp.toString() +")");
+        offset += 8;
 
         int stackedSize = 0;
-        // TODO passing parameters
+        int numOfParam = 0;
+        // passing parameters
         for (int i = 0; i < fce.params.size(); i ++) {
         // for (Expr p : fce.params) {
             Expr p = fce.params.get(i);
@@ -431,9 +451,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 int storageDirection = (v.offset == -1) ? 4 : -4;
                 int size = 0; // size has been stacked
                 while (structSize > 0) {
-                    writer.println("    lw   $a0, " + size + "(" + r.toString() + ")");
-                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    writer.println("    lw   $a0, " + size + "(" + r.toString() + ")");
+                    writer.println("    sw   $a0, 0(" + Register.sp.toString() + ")    #" + v.varName);
                     offset = offset + 4;
                     structSize = structSize - 4;
                     size = size + storageDirection;
@@ -441,7 +461,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 }
             } else if (numOfParam < 4) {
                 // store the first 4 in a0-3
-                writer.println("    add  $a" + numOfParam + ", $zero, " + r.toString());
+                writer.println("    add  $a" + numOfParam + ", $zero, " + r.toString() + "    #" + v.varName);
             } else {
                 // stacked more parameters (more than 4)
                 int size = t.size();
@@ -450,12 +470,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     while (stackedSize %  4 != 0) {
                         stackedSize ++;
                     }
-                    writer.println("    sw   " + r.toString() + ", 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -4");
+                    writer.println("    sw   " + r.toString() + ", 0(" + Register.sp.toString() + ")    #" + v.varName);
+                    offset += 4;
                     stackedSize += 4;
                 } else {
-                    writer.println("    sb   " + r.toString() + ", 0(" + Register.sp.toString() + ")");
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
+                    writer.println("    sb   " + r.toString() + ", 0(" + Register.sp.toString() + ")    #" + v.varName);
+                    offset += 1;
                     stackedSize += 1;
                 }
             }
@@ -463,28 +485,28 @@ public class CodeGenerator implements ASTVisitor<Register> {
             numOfParam ++;
         }
 
-        // resest offset
-        int oldStackOffset = offset;
-        offset = 0;
+        // recitfy stack pointer after passing the parameters
+        rectifyStackPointer();
+        while (stackedSize %  4 != 0) {
+            stackedSize ++;
+        }
 
         // jump back to the caller function
         writer.println("    jal  " + fce.name);
 
         // clear all stacked parameters
         writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", " + stackedSize);
+        offset -= stackedSize;
 
         // restore $fp and $ra
-        writer.println("    lw   " + Register.fp.toString()+ ", 8(" + Register.sp.toString() +")");
-        writer.println("    lw   " + Register.ra.toString() + ", 4(" + Register.sp.toString() +")");
         writer.println("    addi " + Register.sp.toString() +", " + Register.sp.toString() +", 8");
-        offset += 8;
+        writer.println("    lw   " + Register.fp.toString()+ ", -4(" + Register.sp.toString() +")");
+        writer.println("    lw   " + Register.ra.toString() + ", -8(" + Register.sp.toString() +")");
+        offset -= 8;
 
         // TODO store return value -> struct more than 4 bytes
         Register result = getRegister();
         writer.println("    add  " + result.toString() + ", $zero, $v0");
-
-        // restore offset
-        offset = oldStackOffset;
 
         return result;
     }
@@ -612,6 +634,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     public void rectifyStackPointer() {
         int rectifier = 0;
+        // if (offset % 4 != 0) {
+        //     rectifier += 4;
+        // }
         while (offset % 4 != 0) {
             rectifier ++;
             offset ++;
@@ -635,6 +660,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
             }
             index ++ ;
         }
+        while (result % 4 != 0) {
+            result ++;
+        }
         return result;
     }
 
@@ -647,10 +675,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_i:");
         writer.println("    li   $v0, 1");
-        writer.println("    sw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
@@ -658,11 +686,11 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public void generatePrintC() {
         writer.println("    .text");
         writer.println("print_c:");
-        writer.println("    li   $v0, 4");
-        writer.println("    sw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    li   $v0, 11");
+        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
@@ -671,10 +699,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_s:");
         writer.println("    li   $v0, 4");
-        writer.println("    sw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 0(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
