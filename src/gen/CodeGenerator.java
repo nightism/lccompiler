@@ -706,4 +706,34 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
+
+    public void generateMcmalloc() {
+        writer.println("    .text");
+        writer.println("mcmalloc:");
+        writer.println("    li   $v0, 9");
+        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    add  $t0, $a0, $zero");
+        writer.println("    syscall");
+        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    jr   " + Register.ra.toString() + "");
+        writer.println();
+    }
+
+    public void generateReadI() {
+        writer.println("    .text");
+        writer.println("read_i:");
+        writer.println("    li   $v0, 5");
+        writer.println("    syscall");
+        writer.println("    jr   " + Register.ra.toString() + "");
+        writer.println();
+    }
+
+    public void generateReadC() {
+        writer.println("    .text");
+        writer.println("read_c:");
+        writer.println("    li   $v0, 12");
+        writer.println("    syscall");
+        writer.println("    jr   " + Register.ra.toString() + "");
+        writer.println();
+    }
 }
