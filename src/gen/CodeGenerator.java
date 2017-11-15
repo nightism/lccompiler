@@ -407,11 +407,35 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
             writer.println("    sw   " + result.toString() + ", (" + address.toString() + ")");
             freeRegister(address);
-
         } else if (assignee instanceof ArrayAccessExpr) {
+            ArrayAccessExpr aae = (ArrayAccessExpr) assignee;
+            Register address = getArrayAccessAddress(aae);
+            if (address == null) {
+                freeRegister(result);
+                return null;
+            }
 
+            int elemSize = assignee.type.size();
+            if (elemSize == 1) {
+                writer.println("    lb   " + result.toString() + ", (" + address.toString() + ")");
+            } else {
+                writer.println("    lw   " + result.toString() + ", (" + address.toString() + ")");
+            }
         } else if (assignee instanceof ValueAtExpr) {
-
+            ValueAtExpr vae = (ValueAtExpr) assignee;
+            Register address = vae.exp.accept(this);
+            if (address == null) {
+                return null;
+            } else {
+                PointerType t = (PointerType) vae.type;
+                int size = t.type.size();
+                if (size == 1) {
+                    writer.println("    sb   " + result.toString() + ", (" + address.toString() + ")");
+                } else {
+                    writer.println("    sw   " + result.toString() + ", (" + address.toString() + ")");
+                }
+                freeRegister(address);
+            }
         }
 
         freeRegister(result);
@@ -669,6 +693,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitIf(If i) {
+        int num = stmtNum;
+        stmtNum ++;
         Expr cond =  i.cond;
         Stmt ifStmt = i.ifStmt;
         Stmt elseStmt = i.elseStmt;
@@ -678,18 +704,17 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         }
 
-        writer.println("    bne  " + condResult.toString() + ", $zero, IFSTATEMENT" + stmtNum);
+        writer.println("    bne  " + condResult.toString() + ", $zero, IFSTATEMENT" + num);
         freeRegister(condResult);
-        writer.println("    j    ELSESTATEMENT" + stmtNum);
-        writer.println("IFSTATEMENT" + stmtNum + ": ");
+        writer.println("    j    ELSESTATEMENT" + num);
+        writer.println("IFSTATEMENT" + num + ": ");
         ifStmt.accept(this);
-        writer.println("    j    ENDIFELSE" + stmtNum);
-        writer.println("ELSESTATEMENT" + stmtNum + ": ");
+        writer.println("    j    ENDIFELSE" + num);
+        writer.println("ELSESTATEMENT" + num + ": ");
         if (elseStmt != null) {
             elseStmt.accept(this);
         }
-        writer.println("ENDIFELSE" + stmtNum + ": ");
-        stmtNum ++;
+        writer.println("ENDIFELSE" + num + ": ");
         return null;
     }
 
@@ -835,6 +860,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitWhile(While w) {
+        int num = stmtNum;
+        stmtNum ++;
         Expr cond = w.cond;
         Stmt s = w.stmt;
 
@@ -843,13 +870,13 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         }
 
-        writer.println("STARTWHILECOND" + stmtNum + ": ");
-        writer.println("    bne  " + r.toString() + ", $zero, WHILESTATEMENT" + stmtNum);
-        writer.println("    j    ENDWHILE" + stmtNum);
-        writer.println("WHILESTATEMENT" + stmtNum + ": ");
+        writer.println("STARTWHILECOND" + num + ": ");
+        writer.println("    bne  " + r.toString() + ", $zero, WHILESTATEMENT" + num);
+        writer.println("    j    ENDWHILE" + num);
+        writer.println("WHILESTATEMENT" + num + ": ");
         s.accept(this);
-        writer.println("    j    STARTWHILECOND" + stmtNum);
-        writer.println("ENDWHILE" + stmtNum + ": ");
+        writer.println("    j    STARTWHILECOND" + num);
+        writer.println("ENDWHILE" + num + ": ");
         freeRegister(r);
 
         return null;
@@ -952,9 +979,36 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    add  " + result.toString() + ", " + result.toString() + ", " + i);
 
         return result;
-
     }
 
+    private Register getArrayAccessAddress(ArrayAccessExpr aae) {
+        VarExpr vd = (VarExpr) aae.base;
+        ArrayType at = (ArrayType) vd.type;
+        int elemSize = at.type.size();
+
+        Register base = vd.accept(this);
+        if (base == null) {
+            return null;
+        }
+        Register index = aae.index.accept(this);
+        if (index == null) {
+            freeRegister(base);
+            return null;
+        }
+
+        Register result = getRegister();
+
+        int storageDirection = (vd.decl.offset == -1) ? (elemSize) : (-1 * elemSize);
+        writer.println("    li   " + result.toString() + ", " + storageDirection);
+        writer.println("    mult " + result.toString() + ", " + index.toString());
+        writer.println("    mflo " + result.toString());
+        writer.println("    add  " + result.toString() + ", " + base.toString() + ", " + result.toString());
+        // now result stores the address of the target element
+
+        freeRegister(base);
+        freeRegister(index);
+        return result;
+    }
 
 
 
