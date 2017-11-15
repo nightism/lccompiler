@@ -352,7 +352,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         }
 
-        if (assignee instanceof VarExpr) {
+        if (assignee.type instanceof StructType) {
+
+        } else if (assignee instanceof VarExpr) {
             VarExpr v = (VarExpr) assignee;
             if (v.decl.type.size() == 0) {
                 freeRegister(result);
@@ -361,27 +363,8 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
             Register address;
             if (v.decl.offset == -1) {
-                if (v.decl.type instanceof StructType) {
-                    StructType st  = ((StructType) v.decl.type);
-                    String firstVarName = st.sd.varDecls.get(0).varName;
-                    // varName_structName_fieldName
-                    address = getRegister();
-                    writer.println("    la   " + address.toString() + ", " + v.name + "_" + st.name + "_" + firstVarName);
-
-                    // TODO struct
-                    // ASSIGNMENT START
-                    // int size = st.size();
-                    // int stacked;
-                    // Register helper = getRegister();
-                    // for (stacked = size; stacked > 0; stacked = stacked - 4) {
-                    //     int stackIndex = size - stacked + 4;
-                    //     writer.println("    lw   " + helper.toString() + ", (" + result.toString() + ")");
-                    //     writer.println("    sw   " + helper.toString() + ", -" + stackIndex + "(" + Register.sp.toString() + ")");
-                    //     writer.println("    addi " + address.toString() + ", " + address.toString() + ", 4");
-                } else {
-                    address = getRegister();
-                    writer.println("    la   " + address.toString() + ", " + v.name);
-                }
+                address = getRegister();
+                writer.println("    la   " + address.toString() + ", " + v.name);
             } else {
                 address = getVarAddress(v);
                 if (address == null) {
