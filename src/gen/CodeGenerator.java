@@ -250,6 +250,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
         generatePrintI();
         generatePrintC();
         generatePrintS();
+        generateReadI();
+        generateReadC();
+        generateMcmalloc();
 
 
         writer.flush();
