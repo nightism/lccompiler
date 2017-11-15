@@ -12,12 +12,12 @@
 //     return i;
 // }
 //
-// struct myst {
-//     int a;
-//     char b;
-// };
-//
-// struct myst s1;
+struct myst {
+    char b;
+    int array[4];
+};
+
+struct myst s1;
 //
 //
 // int a;
@@ -32,22 +32,38 @@
 
 int main() {
 
-  char test;
+  // char test;
+  //
+  // test = read_c();
+  //
+  // print_c(tests);
 
-  test = read_c();
-
-  print_c(test);
-
-    // struct myst s2;
+    struct myst s2;
     //
     // int e[15];
     // char * h;
-    //
+    // //
     // s1.a = 10;
     // s2.a = 14;
     // s1.b = 's';
     // s2.b = read_c();
     // print_s((char*)"\n");
+    //
+    // s1.c = (int *) mcmalloc(sizeof(int *));
+    // s1.d = (char *) mcmalloc(1);
+    // s2.c = (int *) mcmalloc(4);
+    // s2.d = (char *) mcmalloc(sizeof(char*));
+    //
+    // *s1.c = s2.a;
+    // *s2.c = s1.a;
+    // *s1.d = s2.b;
+    // *s2.d = s1.b;
+
+    s1.b = 's';
+    s1.array[3] = 826;
+    s1.array[0] = 937;
+    s2 = s1;
+
     //
     // c[0] = '+';
     // c[15] = '4';
@@ -79,12 +95,25 @@ int main() {
     // e = 'e';
     // f = 6;
 
-    // 1014s
+    // // 1014s
     // print_i(s1.a);
     // print_i(s2.a);
     // print_c(s1.b);
     // print_c(s2.b);
     // print_s((char*)"\n");
+    //
+    // //1410 s
+    // print_i(*s1.c);
+    // print_i(*s2.c);
+    // print_c(*s1.d);
+    // print_c(*s2.d);
+    // print_s((char*)"\n");
+
+    //826937
+    print_i(s2.array[3]);
+    print_i(s2.array[0]);
+    print_s((char*)"\n");
+
     //
     // // 88+q81344
     // print_i(e[14]);
