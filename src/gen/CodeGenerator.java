@@ -398,6 +398,15 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
             freeRegister(address);
         } else if (assignee instanceof FieldAccessExpr) {
+            FieldAccessExpr faexp = (FieldAccessExpr) assignee;
+            Register address = getFieldAddress(faexp);
+            if (address == null) {
+                freeRegister(result);
+                return null;
+            }
+
+            writer.println("    sw   " + result.toString() + ", (" + address.toString() + ")");
+            freeRegister(address);
 
         } else if (assignee instanceof ArrayAccessExpr) {
 
@@ -911,7 +920,40 @@ public class CodeGenerator implements ASTVisitor<Register> {
         return result;
     }
 
+    private Register getFieldAddress(FieldAccessExpr faexp) {
 
+        Expr baseExp = faexp.base;
+        StructType st = (StructType) baseExp.type;
+        String field = faexp.field;
+
+        if (baseExp instanceof VarExpr) {
+            int thisOffset = ((VarExpr) baseExp).decl.offset;
+            if (thisOffset == -1) {
+                Register result = getRegister();
+                writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
+                return result;
+            }
+        }
+
+        Register result = baseExp.accept(this);
+        if (result == null) {
+            return null;
+        }
+
+        int i = 0;
+        for (i = 0; i < st.sd.varDecls.size(); i ++) {
+            VarDecl vd = st.sd.varDecls.get(i);
+            if (vd.varName.equals(field)) {
+                break;
+            }
+        }
+        i = i * -4;
+
+        writer.println("    add  " + result.toString() + ", " + result.toString() + ", " + i);
+
+        return result;
+
+    }
 
 
 
