@@ -53,24 +53,27 @@ int full() {
 int set(char row, int col, char mark) {
   int r;
   r = 1;
+  print_c(row);
+  print_i(col);
+  print_s((char *) "\n");
   if (row == 'a') {
      if (col == 1) {
         if (a11 == empty)
-	    a11 = mark;
-	else
-	  r = -1;
+	        a11 = mark;
+   	    else
+	        r = -1;
      } else {
        if (col == 2) {
          if (a12 == empty)
            a12 = mark;
-	 else
-	   r = -1;
+	     else
+	       r = -1;
        } else {
          if (col == 3) {
-	   if (a13 == empty)
-              a13 = mark;
-	   else
-	     r = -1;
+	         if (a13 == empty)
+             a13 = mark;
+	         else
+	           r = -1;
          } else {
            r = 0;
          }
@@ -81,53 +84,53 @@ int set(char row, int col, char mark) {
        if (col == 1) {
           if (a21 == empty)
             a21 = mark;
-	  else
-	    r = -1;
+	        else
+	          r = -1;
        } else {
          if (col == 2) {
-	    if (a22 == empty)
+	         if (a22 == empty)
               a22 = mark;
-	    else
-	      r = -1;
+	         else
+	           r = -1;
          } else {
-	    if (col == 3) {
-	      if (a23 == empty)
-                 a23 = mark;
-              else
-	       r = -1;
-            } else {
-	      r = 0;
-	    }
-	}
+	         if (col == 3) {
+	           if (a23 == empty)
+                a23 = mark;
+             else
+	              r = -1;
+           } else {
+	           r = 0;
+	         }
+	       }
       }
     } else {
-     if (row == 'c') {
-        if (col == 1) {
-	   if (a31 == empty)
+      if (row == 'c') {
+         if (col == 1) {
+	         if (a31 == empty)
              a31 = mark;
-	   else
-	     r = -1;
-        } else {
+	         else
+	           r = -1;
+         } else {
            if (col == 2) {
-	      if (a32 == empty)
+	           if (a32 == empty)
                 a32 = mark;
-              else
-	        r = -1;
+            else
+	              r = -1;
            } else {
               if (col == 3) {
-	        if (a33 == empty)
+	              if (a33 == empty)
                    a33 = mark;
-		else
-		  r = -1;
-	      } else {
-	        r = 0;
-	      }
-          }
-        }
-     } else {
-       r = 0;
-     }
-   }
+		            else
+		               r = -1;
+	            } else {
+	                 r = 0;
+	            }
+           }
+         }
+      } else {
+         r = 0;
+      }
+    }
   }
  return r;
 }
@@ -173,6 +176,7 @@ void selectmove(int player) {
     row = read_c(); col = read_i();
     read_c(); // consume enter
     mark = get_mark(player);
+    // print_c(row); print_i(col);print_s((char *)"\n");
     success = set(row,col,mark);
       if (success == 0) {
       	 print_s((char*) "That is not a valid move!\n");
@@ -206,7 +210,7 @@ int won(char mark) {
 	  if (a13 == mark) {
 	     r = 1;
 	  }
-	} 
+	}
       }
     }
   }
@@ -229,7 +233,7 @@ int won(char mark) {
         if (a31 == mark) {
 	   r = 1;
 	}
-      } 
+      }
     }
   }
 
@@ -273,7 +277,7 @@ void main() {
     } else {
       player = switchPlayer(player); // give the turn to the opponent
     }
-    
+
     if (playing == 0) {
       print_s((char*) "Play again? (y/n)> ");
       yesno = read_c();

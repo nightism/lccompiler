@@ -130,7 +130,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println(p.name + ":");
 
-        // change $fp to $sp 
+        // change $fp to $sp
         writer.println("    add  " + Register.fp.toString()+ ", " + Register.sp.toString() +", $zero");
 
         // save all parameters on stack
@@ -748,6 +748,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                             writer.println("    addi $v0, " + Register.sp.toString() + ", 4");
                             freeRegister(result);
                             freeRegister(address);
+                            writer.println("    add  $sp, $fp, $zero");
                             writer.println("    jr   $ra");
                             return null;
                         }
@@ -777,6 +778,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 }
             }
 
+            writer.println("    add  $sp, $fp, $zero");
             writer.println("    jr   $ra");
 
         }
@@ -803,10 +805,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         // define String literal in data section
         writer.println("    .data");
         String str = sl.str;
-        writer.println("str" + strNum + ":  .asciiz  \"" + str + "\"");
+        writer.println("STRING" + strNum + ":  .asciiz  \"" + str + "\"");
         // back to text section and store the string in register
         writer.println("    .text");
-        writer.println("    la " + result.toString() + ", str" + strNum);
+        writer.println("    la " + result.toString() + ", STRING" + strNum);
         return result;
     }
 
