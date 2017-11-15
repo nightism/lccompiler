@@ -353,7 +353,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
 
         if (assignee.type instanceof StructType) {
-
+            freeRegister(result);
+            assignStruct(assignee, assigner);
+            return null;
         } else if (assignee instanceof VarExpr) {
             VarExpr v = (VarExpr) assignee;
             if (v.decl.type.size() == 0) {
@@ -992,6 +994,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         return result;
     }
 
+    private void assignStruct (Expr assignee, Expr assigner) {
+
+    }
+
 
 
 
@@ -1010,10 +1016,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_i:");
         writer.println("    li   $v0, 1");
-        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
@@ -1022,10 +1028,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_c:");
         writer.println("    li   $v0, 11");
-        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
@@ -1034,10 +1040,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("print_s:");
         writer.println("    li   $v0, 4");
-        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
@@ -1046,10 +1052,10 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    .text");
         writer.println("mcmalloc:");
         writer.println("    li   $v0, 9");
-        writer.println("    sw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    sw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    add  $t0, $a0, $zero");
         writer.println("    syscall");
-        writer.println("    lw   $t0, 4(" + Register.sp.toString() +")");
+        writer.println("    lw   $t0, -4(" + Register.sp.toString() +")");
         writer.println("    jr   " + Register.ra.toString() + "");
         writer.println();
     }
