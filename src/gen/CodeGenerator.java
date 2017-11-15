@@ -82,7 +82,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -1");
                 offset = offset + 1;
                 vd.offset = offset;
-            } else { // size >= 4 and size % 4 == 0
+            } else if (size != 0) { // size >= 4 and size % 4 == 0
                 // int or int* or struct related
                 rectifyStackPointer();
                 while (totalParamSize % 4 != 0) {
@@ -94,6 +94,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     vd.offset = offset;
                 } else if (vd.type instanceof StructType) {
                     vd.offset = offset + Math.min(4, size);
+                    writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
+                    offset = offset + size;
+                } else if (vd.type instanceof ArrayType) {
+                    if (((ArrayType) vd.type).type == BaseType.CHAR) {
+                        vd.offset = offset + 1;
+                    } else {
+                        vd.offset = offset + 4;
+                    }
                     writer.println("    addi " + Register.sp.toString() + ", " + Register.sp.toString() + ", -" + size);
                     offset = offset + size;
                 }
@@ -220,7 +228,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     writer.print(varName + "_" + structName + "_" + v.varName);
                     writer.println(":  .space  " + size);
                 }
-            } else if (vd.type.size() <= 4) {
+            } else if (vd.type.size() == 4) {
                 // declare normal variables
                 writer.println(varName + ":  .word  0");
             } else {
@@ -257,22 +265,27 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitVarExpr(VarExpr v) {
         int size = v.decl.type.size();
         Register result = getRegister();
-        String memAddress = "";
 
-        if (v.decl.offset == -1) {
-            Register address = getRegister();
-            writer.println("    la   " + address.toString() + ", " + v.name);
-            memAddress = "(" + address.toString() + ")";
-            freeRegister(address);
+        if (v.decl.offset == -1 && v.decl.type.size() != 0) {
+            if (v.decl.type instanceof StructType) {
+                StructType st  = ((StructType) v.decl.type);
+                String firstVarName = st.sd.varDecls.get(0).varName;
+                // varName_structName_fieldName
+                writer.println("    la   " + result.toString() + ", " + v.name + "_" + st.name + "_" + firstVarName);
+            } else {
+                writer.println("    la   " + result.toString() + ", " + v.name);
+            }
         } else {
             int thisOffset = offset - v.decl.offset;
-            memAddress = "" + thisOffset + "(" + Register.sp.toString() + ")";
+            writer.println("    addi " + result.toString() + ", " + Register.sp.toString() + ", " + thisOffset);
         }
 
         if (size == 1) {
-            writer.println("    lb   " + result.toString() + ", " + memAddress);
+            writer.println("    lb   " + result.toString() + ", (" + result.toString() + ")");
+        } else if (v.decl.type instanceof ArrayType || v.decl.type instanceof StructType) {
+            return result;
         } else {
-            writer.println("    lw   " + result.toString() + ", " + memAddress);
+            writer.println("    lw   " + result.toString() + ", (" + result.toString() + ")");
         }
         return result;
     }
@@ -285,7 +298,40 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitArrayAccessExpr(ArrayAccessExpr aae) {
-        return null;
+        VarExpr vd = (VarExpr) aae.base;
+        ArrayType at = (ArrayType) vd.type;
+        int elemSize = at.type.size();
+
+        Register base = vd.accept(this);
+        if (base == null) {
+            return null;
+        }
+        Register index = aae.index.accept(this);
+        if (index == null) {
+            freeRegister(base);
+            return null;
+        }
+
+        Register result = getRegister();
+
+        int storageDirection = (vd.decl.offset == -1) ? (elemSize) : (-1 * elemSize);
+        writer.println("    li   " + result.toString() + ", " + storageDirection);
+        writer.println("    mult " + result.toString() + ", " + index.toString());
+        writer.println("    mflo " + result.toString());
+        writer.println("    add  " + result.toString() + ", " + base.toString() + ", " + result.toString());
+        // now result stores the address of the target element
+
+        if (at.type instanceof StructType) {
+            // do nothing
+        } else if (elemSize == 1) {
+            writer.println("    lb   " + result.toString() + ", (" + result.toString() + ")");
+        } else if (elemSize == 4) {
+            writer.println("    lw   " + result.toString() + ", (" + result.toString() + ")");
+        }
+
+        freeRegister(base);
+        freeRegister(index);
+        return result;
     }
 
     @Override
@@ -295,6 +341,68 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitAssign(Assign a) {
+        Expr assignee = a.assignee;
+        Expr assigner = a.assigner;
+
+        Register result = assigner.accept(this);
+        if (result == null) {
+            return null;
+        }
+
+        if (assignee instanceof VarExpr) {
+            VarExpr v = (VarExpr) assignee;
+            if (v.decl.type.size() == 0) {
+                freeRegister(result);
+                return null;
+            }
+
+            Register address;
+            if (v.decl.offset == -1) {
+                if (v.decl.type instanceof StructType) {
+                    StructType st  = ((StructType) v.decl.type);
+                    String firstVarName = st.sd.varDecls.get(0).varName;
+                    // varName_structName_fieldName
+                    address = getRegister();
+                    writer.println("    la   " + address.toString() + ", " + v.name + "_" + st.name + "_" + firstVarName);
+
+                    // TODO struct
+                    // ASSIGNMENT START
+                    // int size = st.size();
+                    // int stacked;
+                    // Register helper = getRegister();
+                    // for (stacked = size; stacked > 0; stacked = stacked - 4) {
+                    //     int stackIndex = size - stacked + 4;
+                    //     writer.println("    lw   " + helper.toString() + ", (" + result.toString() + ")");
+                    //     writer.println("    sw   " + helper.toString() + ", -" + stackIndex + "(" + Register.sp.toString() + ")");
+                    //     writer.println("    addi " + address.toString() + ", " + address.toString() + ", 4");
+                } else {
+                    address = getRegister();
+                    writer.println("    la   " + address.toString() + ", " + v.name);
+                }
+            } else {
+                address = getVarAddress(v);
+                if (address == null) {
+                    freeRegister(result);
+                    return null;
+                }
+            }
+
+            if (v.decl.type.size() == 1) {
+                writer.println("    sb   " + result.toString() + ", (" + address.toString() + ")");
+            } else {
+                writer.println("    sw   " + result.toString() + ", (" + address.toString() + ")");
+            }
+
+            freeRegister(address);
+        } else if (assignee instanceof FieldAccessExpr) {
+
+        } else if (assignee instanceof ArrayAccessExpr) {
+
+        } else if (assignee instanceof ValueAtExpr) {
+
+        }
+
+        freeRegister(result);
         return null;
     }
 
@@ -420,7 +528,38 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
     @Override
     public Register visitFieldAccessExpr(FieldAccessExpr faexp) {
-        return null;
+        Expr baseExp = faexp.base;
+        StructType st = (StructType) baseExp.type;
+        String field = faexp.field;
+
+        if (baseExp instanceof VarExpr) {
+            int thisOffset = ((VarExpr) baseExp).decl.offset;
+            if (thisOffset == -1) {
+                Register result = getRegister();
+                writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
+                writer.println("    lw   " + result.toString() + ", (" + result.toString() + ")");
+                return result;
+            }
+        }
+
+        Register result = baseExp.accept(this);
+        if (result == null) {
+            return null;
+        }
+
+        int i = 0;
+        for (i = 0; i < st.sd.varDecls.size(); i ++) {
+            VarDecl vd = st.sd.varDecls.get(i);
+            if (vd.varName.equals(field)) {
+                break;
+            }
+        }
+        i = i * -4;
+
+        writer.println("    add  " + result.toString() + ", " + result.toString() + ", " + i);
+        writer.println("    lw   " + result.toString() + ", (" + result.toString() + ")");
+
+        return result;
     }
 
     @Override
@@ -510,7 +649,6 @@ public class CodeGenerator implements ASTVisitor<Register> {
         writer.println("    lw   " + Register.ra.toString() + ", -8(" + Register.sp.toString() +")");
         offset -= 8;
 
-        // TODO store return value -> struct more than 4 bytes
         Register result = getRegister();
         writer.println("    add  " + result.toString() + ", $zero, $v0");
 
@@ -564,11 +702,61 @@ public class CodeGenerator implements ASTVisitor<Register> {
     public Register visitReturn(Return r) {
         Expr e = r.exp;
         if (e != null) {
-            Register reg = e.accept(this);
-            if (reg != null) {
-                writer.println("    add  $v0, $zero, " + reg.toString());
-                freeRegister(reg);
+
+            // save struct as return value
+            if (e.type instanceof StructType) {
+                if (e.type.size() != 0) {
+                    StructType st = (StructType) e.type;
+
+                    // save struct that is declared globally
+                    if (e instanceof VarExpr) {
+                        int thisOffset = ((VarExpr) e).decl.offset;
+                        if (thisOffset == -1) {
+                            Register result = getRegister();
+                            String firstVarName = ((StructType) e.type).sd.varDecls.get(0).varName;
+                            int size = e.type.size();
+                            Register address = getRegister();
+                            writer.println("    la   " + address.toString() + ", " + ((VarExpr) e).name + "_" + st.name + "_" + firstVarName);
+                            for (int stacked = size; stacked > 0; stacked = stacked - 4) {
+                                int stackIndex = size - stacked + 4;
+                                writer.println("    lw   " + result.toString() + ", (" + address.toString() + ")");
+                                writer.println("    sw   " + result.toString() + ", -" + stackIndex + "(" + Register.sp.toString() + ")");
+                                writer.println("    addi " + address.toString() + ", " + address.toString() + ", 4");
+                            }
+                            writer.println("    addi $v0, " + Register.sp.toString() + ", 4");
+                            freeRegister(result);
+                            freeRegister(address);
+                            writer.println("    jr   $ra");
+                            return null;
+                        }
+                    }
+
+                    // save other structs
+                    Register address = e.accept(this);
+                    Register result = getRegister();
+                    String firstVarName = ((StructType) e.type).sd.varDecls.get(0).varName;
+                    int size = e.type.size();
+                    for (int stacked = size; stacked > 0; stacked = stacked - 4) {
+                        int stackIndex = size - stacked + 4;
+                        writer.println("    lw   " + result.toString() + ", (" + address.toString() + ")");
+                        writer.println("    sw   " + result.toString() + ", -" + stackIndex + "(" + Register.sp.toString() + ")");
+                        writer.println("    addi " + address.toString() + ", " + address.toString() + ", -4");
+                    }
+                    writer.println("    addi $v0, " + Register.sp.toString() + ", 4");
+                    freeRegister(result);
+                    freeRegister(address);
+
+                }
+            } else {
+                Register reg = e.accept(this);
+                if (reg != null) {
+                    writer.println("    add  $v0, $zero, " + reg.toString());
+                    freeRegister(reg);
+                }
             }
+
+            writer.println("    jr   $ra");
+
         }
         return null;
     }
@@ -656,6 +844,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
     }
 
 
+
     /**
         util methods
     */
@@ -693,6 +882,44 @@ public class CodeGenerator implements ASTVisitor<Register> {
         }
         return result;
     }
+
+
+
+    /**
+        assignment functions
+    */
+
+    private Register getVarAddress(VarExpr v) {
+        int size = v.decl.type.size();
+        Register result = getRegister();
+        if (v.decl.offset == -1 && v.decl.type.size() != 0) {
+            if (v.decl.type instanceof StructType) {
+                StructType st  = ((StructType) v.decl.type);
+                String firstVarName = st.sd.varDecls.get(0).varName;
+                // varName_structName_fieldName
+                writer.println("    la   " + result.toString() + ", " + v.name + "_" + st.name + "_" + firstVarName);
+            } else {
+                writer.println("    la   " + result.toString() + ", " + v.name);
+            }
+        } else {
+            int thisOffset = offset - v.decl.offset;
+            writer.println("    addi " + result.toString() + ", " + Register.sp.toString() + ", " + thisOffset);
+        }
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
         build-in functions
