@@ -352,11 +352,12 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         }
 
-        if (assignee.type instanceof StructType) {
-            freeRegister(result);
-            assignStruct(assignee, assigner);
-            return null;
-        } else if (assignee instanceof VarExpr) {
+        // if (assignee.type instanceof StructType) {
+        //     freeRegister(result);
+        //     assignStruct(assignee, assigner);
+        //     return null;
+        // } else
+        if (assignee instanceof VarExpr) {
             VarExpr v = (VarExpr) assignee;
             if (v.decl.type.size() == 0) {
                 freeRegister(result);
