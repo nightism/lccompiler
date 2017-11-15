@@ -13,12 +13,16 @@ void main() {
   
   first = 0;
   second = 1;
-    
+
+
+  c = 0;
+  print_i(c);
+
   print_s((char*)"First ");
   print_i(n);
   print_s((char*)" terms of Fibonacci series are : ");
- 
-  c = 0;
+
+
   while (c < n) {
     if ( c <= 1 )
       next = c;
