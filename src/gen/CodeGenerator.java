@@ -427,7 +427,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
             if (address == null) {
                 return null;
             } else {
-                PointerType t = (PointerType) vae.type;
+                PointerType t = (PointerType) vae.exp.type;
                 int size = t.type.size();
                 if (size == 1) {
                     writer.println("    sb   " + result.toString() + ", (" + address.toString() + ")");
@@ -843,7 +843,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
             return null;
         } else {
             Register result = getRegister();
-            PointerType t = (PointerType) vae.type;
+            PointerType t = (PointerType) vae.exp.type;
             int size = t.type.size();
             if (size == 1) {
                 writer.println("    lb   " + result.toString() + ", (" + r.toString() + ")");
