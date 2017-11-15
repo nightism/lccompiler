@@ -225,14 +225,17 @@ public class CodeGenerator implements ASTVisitor<Register> {
                 // declare global struct variables
                 StructType t = (StructType) vd.type;
                 String structName = t.name;
-                List<VarDecl> vdList = new ArrayList<VarDecl>(t.sd.varDecls);
-                Collections.reverse(vdList); // store the gobal struct downward
-                for (VarDecl v : vdList) {
-                    int size = ((v.type.size() - 1) / 4 + 1) * 4;
-                    // name : varName_structName_fieldName
-                    writer.print(varName + "_" + structName + "_" + v.varName);
-                    writer.println(":  .space  " + size);
-                }
+                int size = t.size();
+                // List<VarDecl> vdList = new ArrayList<VarDecl>(t.sd.varDecls);
+                writer.print(varName + "_" + structName);
+                writer.println(":  .space  " + size);
+                // Collections.reverse(vdList); // store the gobal struct downward
+                // for (VarDecl v : vdList) {
+                //     int size = ((v.type.size() - 1) / 4 + 1) * 4;
+                //     // name : varName_structName_fieldName
+                //     writer.print(varName + "_" + structName + "_" + v.varName);
+                //     writer.println(":  .space  " + size);
+                // }
             } else if (vd.type.size() <= 4) {
                 // declare normal variables
                 writer.println(varName + ":  .word  0");
@@ -274,12 +277,18 @@ public class CodeGenerator implements ASTVisitor<Register> {
         int size = v.decl.type.size();
         Register result = getRegister();
 
-        if (v.decl.offset == -1 && v.decl.type.size() != 0) {
+        if (v.decl.type.size() == 0) {
+            freeRegister(result);
+            return null;
+        }
+
+        if (v.decl.offset == -1) {
             if (v.decl.type instanceof StructType) {
                 StructType st  = ((StructType) v.decl.type);
-                String firstVarName = st.sd.varDecls.get(0).varName;
-                // varName_structName_fieldName
-                writer.println("    la   " + result.toString() + ", " + v.name + "_" + st.name + "_" + firstVarName);
+                int address = st.size() - 4;
+                // varName_structName
+                writer.println("    la   " + result.toString() + ", " + v.name + "_" + st.name);
+                writer.println("    addi " + result.toString() + ", " + result.toString() + ", " + address);
             } else {
                 writer.println("    la   " + result.toString() + ", " + v.name);
             }
@@ -591,46 +600,48 @@ public class CodeGenerator implements ASTVisitor<Register> {
             }
         }
 
-        int thisOffset = 0;
-        if (baseExp instanceof VarExpr) {
-            thisOffset = ((VarExpr) baseExp).decl.offset;
+        // int thisOffset = 0;
+        // if (baseExp instanceof VarExpr) {
+        //     thisOffset = ((VarExpr) baseExp).decl.offset;
+        // }
+        // if (thisOffset == -1) {
+        //     result = getRegister();
+        //     writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
+
+        //     if (elemType instanceof ArrayType) {
+        //         int totalSize = elemType.size();
+        //         int targetAddress = totalSize - ((ArrayType) elemType).type.size();
+        //         writer.println("    addi  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
+        //     } else if (elemType instanceof StructType) {
+        //         int totalSize = elemType.size();
+        //         // Type firstType = ((StructType) elemType).sd.varDecls.get(0).type;
+        //         int targetAddress = totalSize - 4; //firstType.size();
+        //         writer.println("    addi  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
+        //     }
+        // } else {
+        // }
+
+        result = baseExp.accept(this);
+        if (result == null) {
+            return null;
         }
-        if (thisOffset == -1) {
-            result = getRegister();
-            writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
 
-            if (elemType instanceof ArrayType) {
-                int totalSize = elemType.size();
-                int targetAddress = totalSize - ((ArrayType) elemType).type.size();
-                writer.println("    addi  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
-            } else if (elemType instanceof StructType) {
-                int totalSize = elemType.size();
-                // Type firstType = ((StructType) elemType).sd.varDecls.get(0).type;
-                int targetAddress = totalSize - 4; //firstType.size();
-                writer.println("    addi  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
-            }
-        } else {
-            result = baseExp.accept(this);
-            if (result == null) {
-                return null;
-            }
-
-            int targetAddress = 0;
-            for (int i = 0; i < st.sd.varDecls.size(); i ++) {
-                VarDecl vd = st.sd.varDecls.get(i);
-                if (vd.type.size() > 1) {
-                    while(targetAddress % 4 != 0) {
-                        targetAddress ++;
-                    }
+        int targetAddress = 0;
+        for (int i = 0; i < st.sd.varDecls.size(); i ++) {
+            VarDecl vd = st.sd.varDecls.get(i);
+            if (vd.type.size() > 1) {
+                while(targetAddress % 4 != 0) {
+                    targetAddress ++;
                 }
-                if (vd.varName.equals(field)) {
-                    break;
-                }
-                targetAddress += vd.type.size();
             }
-
-            writer.println("    add  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
+            if (vd.varName.equals(field)) {
+                break;
+            }
+            targetAddress += vd.type.size();
         }
+
+        writer.println("    add  " + result.toString() + ", " + result.toString() + ", -" + targetAddress);
+
         if (elemType instanceof ArrayType || elemType instanceof StructType) {
             return result;
         }
@@ -973,14 +984,14 @@ public class CodeGenerator implements ASTVisitor<Register> {
         StructType st = (StructType) baseExp.type;
         String field = faexp.field;
 
-        if (baseExp instanceof VarExpr) {
-            int thisOffset = ((VarExpr) baseExp).decl.offset;
-            if (thisOffset == -1) {
-                Register result = getRegister();
-                writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
-                return result;
-            }
-        }
+        // if (baseExp instanceof VarExpr) {
+        //     int thisOffset = ((VarExpr) baseExp).decl.offset;
+        //     if (thisOffset == -1) {
+        //         Register result = getRegister();
+        //         writer.println("    la   " + result.toString() + ", " + ((VarExpr) baseExp).name + "_" + st.name + "_" + field);
+        //         return result;
+        //     }
+        // }
 
         Register result = baseExp.accept(this);
         if (result == null) {
