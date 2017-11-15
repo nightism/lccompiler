@@ -228,7 +228,7 @@ public class CodeGenerator implements ASTVisitor<Register> {
                     writer.print(varName + "_" + structName + "_" + v.varName);
                     writer.println(":  .space  " + size);
                 }
-            } else if (vd.type.size() == 4) {
+            } else if (vd.type.size() <= 4) {
                 // declare normal variables
                 writer.println(varName + ":  .word  0");
             } else {
@@ -417,9 +417,9 @@ public class CodeGenerator implements ASTVisitor<Register> {
 
             int elemSize = assignee.type.size();
             if (elemSize == 1) {
-                writer.println("    lb   " + result.toString() + ", (" + address.toString() + ")");
+                writer.println("    sb   " + result.toString() + ", (" + address.toString() + ")");
             } else {
-                writer.println("    lw   " + result.toString() + ", (" + address.toString() + ")");
+                writer.println("    sw   " + result.toString() + ", (" + address.toString() + ")");
             }
         } else if (assignee instanceof ValueAtExpr) {
             ValueAtExpr vae = (ValueAtExpr) assignee;
@@ -865,12 +865,11 @@ public class CodeGenerator implements ASTVisitor<Register> {
         Expr cond = w.cond;
         Stmt s = w.stmt;
 
+        writer.println("STARTWHILECOND" + num + ": ");
         Register r = cond.accept(this);
         if (r == null) {
             return null;
         }
-
-        writer.println("STARTWHILECOND" + num + ": ");
         writer.println("    bne  " + r.toString() + ", $zero, WHILESTATEMENT" + num);
         writer.println("    j    ENDWHILE" + num);
         writer.println("WHILESTATEMENT" + num + ": ");
