@@ -3,7 +3,9 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include <vector>
 using namespace llvm;
+using namespace std;
 
 namespace {
   struct SkeletonPass : public FunctionPass {
