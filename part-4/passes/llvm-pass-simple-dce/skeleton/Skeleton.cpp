@@ -8,9 +8,9 @@ using namespace llvm;
 using namespace std;
 
 namespace {
-  struct SkeletonPass : public FunctionPass {
+  struct SimpleDCE : public FunctionPass {
     static char ID;
-    SkeletonPass() : FunctionPass(ID) {}
+    SimpleDCE() : FunctionPass(ID) {}
 
     virtual bool runOnFunction(Function &F) {
       errs() << "I saw a function called " << F.getName() << "!\n";
@@ -19,7 +19,7 @@ namespace {
   };
 }
 
-char SkeletonPass::ID = 0;
+// char SkeletonPass::ID = 0;
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html

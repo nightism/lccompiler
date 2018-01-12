@@ -8,9 +8,9 @@ using namespace llvm;
 using namespace std;
 
 namespace {
-  struct SkeletonPass : public FunctionPass {
+  struct MyDCE : public FunctionPass {
     static char ID;
-    SkeletonPass() : FunctionPass(ID) {}
+    MyDCE() : FunctionPass(ID) {}
 
     virtual bool runOnFunction(Function &F) {
       errs() << "I saw a function called " << F.getName() << "!\n";
@@ -19,7 +19,7 @@ namespace {
   };
 }
 
-char SkeletonPass::ID = 0;
+// char SkeletonPass::ID = 0;
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
@@ -31,6 +31,6 @@ char SkeletonPass::ID = 0;
 //   RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
 //                  registerSkeletonPass);
 
-char SimpleDCE::ID = 0;
-__attribute__((unused)) static RegisterPass<SimpleDCE>
+char MyDCE::ID = 0;
+__attribute__((unused)) static RegisterPass<MyDCE>
     X("skeletonpass", "My dead code elimination"); // NOLINT
