@@ -3,6 +3,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -33,7 +34,7 @@ namespace {
             for (Function::iterator bb = F.begin(), e = F.end(); bb != e; ++bb) {
                 for (BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
                     TargetLibraryInfo *TLI = NULL;
-                    if (llvm::isInstructionTriviallyDead(&*i, NULL)) {
+                    if (llvm::isInstructionTriviallyDead(&*i, NULL) && !i->mayHaveSideEffects()) {
                         WL.push_back(&*i);
                     }
                 }
