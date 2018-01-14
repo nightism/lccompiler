@@ -3,6 +3,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
@@ -33,8 +34,20 @@ namespace {
         void findDeadCode(Function &F) {
             for (Function::iterator bb = F.begin(), e = F.end(); bb != e; ++bb) {
                 for (BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-                    TargetLibraryInfo *TLI = NULL;
-                    if (llvm::isInstructionTriviallyDead(&*i, NULL) && !i->mayHaveSideEffects()) {
+                    // TargetLibraryInfo *TLI = NULL;
+                    // if (llvm::isInstructionTriviallyDead(&*i, NULL) && !i->mayHaveSideEffects()) {
+                    //     WL.push_back(&*i);
+                    // }
+
+                    bool dead = true;
+                    for (User* pUser : i->users()) {
+                        // If we enter this loop, we have at least one use, so instruction isn't dead
+                        dead = false;
+                        break;
+                    }
+
+                    // dead is true if we didn't enter the loop, so has no uses
+                    if (dead && !i->mayHaveSideEffects() && !i->isTerminator()) {
                         WL.push_back(&*i);
                     }
                 }
