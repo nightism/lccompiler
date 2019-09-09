@@ -1,7 +1,5 @@
 # LCCOMPILER
 
-Note that specific instructions for each part can be found above by clicking on the part name.
-
 # Marking #
 
 The marking will be done using an automated test suite on a dice machine using Java 8 (1.8 runtime).
